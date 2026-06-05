@@ -32,13 +32,7 @@ No display required — this project only needs the joystick.
 
 ## Dependencies
 
-Install via the Arduino Library Manager:
-
-| Library | Source |
-|---------|--------|
-| **ESP32-BLE-Mouse** | [T-vK/ESP32-BLE-Mouse](https://github.com/T-vK/ESP32-BLE-Mouse) |
-
-> **Note:** ESP32-BLE-Mouse must be installed manually — download the ZIP from GitHub and add it via *Sketch → Include Library → Add .ZIP Library*.
+Just make sure you have the **ESP32 board package** installed in Arduino IDE (*Tools → Board → Boards Manager → "esp32"*).
 
 ## Arduino IDE Setup
 

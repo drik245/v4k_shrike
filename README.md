@@ -8,3 +8,4 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 |---|---------|-------|-------------|
 | 1 | [Snake Game](snake_game/) | Shrike Lite + Shrike Fi | Classic snake game on SSD1306 OLED with joystick control |
 | 2 | [Joystick Mouse](joystick_mouse/) | Shrike Fi | BLE HID mouse using a joystick — requires Bluetooth |
+| 3 | [Servo Ctrl with OLED Gauge](servo_ctrl/) | Shrike Lite + Shrike Fi | Joystick-controlled servo with a live needle gauge on OLED |
