@@ -80,7 +80,7 @@ void loop() {
     Serial.println(" cm");
     
     // Draw bar graph
-    int barWidth = map(distance, 0, 100, 0, 128);
+    int barWidth = map(distance, 0, 200, 0, 128);
     if (barWidth > 128) barWidth = 128;
     display.fillRect(0, 50, barWidth, 10, SSD1306_WHITE);
   }
