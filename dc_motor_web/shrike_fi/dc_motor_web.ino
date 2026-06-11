@@ -1,30 +1,7 @@
 /*
  * DC Motor Web Speed Control – Shrike Fi (ESP32-S3)
  * ==================================================
- * Board target : ESP32-S3 Dev Module (Generic)
- *
- * FPGA generates hardware PWM for L298N motor driver.
- * ESP32-S3 hosts a Wi-Fi AP + web server with a slider UI.
- * MCU sends speed/direction to FPGA over SPI at runtime.
- *
- * Architecture:
- *   Browser → Wi-Fi → ESP32 → SPI → FPGA → PWM → L298N → Motor
- *
- * FPGA I/O (directly wired to L298N):
- *   FPGA_IO8  → L298N ENA  (PWM speed)
- *   FPGA_IO9  → L298N IN1  (direction)
- *   FPGA_IO10 → L298N IN2  (direction)
- *
- * MCU ↔ FPGA bus (Shrike Fi pinout):
- *   ESP_IO12 → FPGA pin 3  (SPI_SCLK)
- *   ESP_IO10 → FPGA pin 4  (SPI_SS)
- *   ESP_IO11 → FPGA pin 5  (SPI_MOSI)
- *   ESP_IO13 → FPGA pin 6  (SPI_MISO)
- *   ESP_IO9  → FPGA EN     (enable)
- *   ESP_IO8  → FPGA PWR    (power control)
- *   ESP_IO21 → onboard LED (status)
- *
- * Ref: https://blog.vicharak.in/7-ways-your-mcu-can-talk-to-fpga-on-shrike/
+ * See README.md for Architecture and Pin mapping details.
  */
 
 #include <WiFi.h>
@@ -32,14 +9,20 @@
 #include <SPI.h>
 #include <LittleFS.h>
 
-// ── Wi-Fi Access Point config ──
+// ── Wi-Fi Configuration ──
+// Set to 1 to create an Access Point (Shrike-Motor)
+// Set to 0 to connect to your home Wi-Fi router
+#define USE_AP_MODE 1
+
+// AP Mode Settings (if USE_AP_MODE == 1)
 const char* AP_SSID = "Shrike-Motor";
 const char* AP_PASS = "vicharak123";
 
+// Station Mode Settings (if USE_AP_MODE == 0)
+const char* WIFI_SSID = "demi.god_prince@G5";
+const char* WIFI_PASS = "@lbert_1879";
+
 // ── FPGA bus pins (Shrike Fi — ESP32-S3 GPIOs) ──
-// These are the 8-line bus connecting the ESP32-S3 to the SLG47910 FPGA.
-// During boot: 4 SPI lines program the bitstream.
-// At runtime:  same 4 SPI lines carry motor commands.
 #define FPGA_SPI_SCK   12   // ESP_IO12 → FPGA pin 3 (SPI_SCLK)
 #define FPGA_SPI_CS    10   // ESP_IO10 → FPGA pin 4 (SPI_SS)
 #define FPGA_SPI_MOSI  11   // ESP_IO11 → FPGA pin 5 (SPI_MOSI)
@@ -51,11 +34,10 @@ const char* AP_PASS = "vicharak123";
 #define LED_PIN 21   // ESP_IO21 – onboard LED
 
 // ── Motor state ──
-int currentSpeed = 0;  // -255..+255 (negative = reverse)
+int currentSpeed = 0; 
 
 WebServer server(80);
 
-// ── Web UI (embedded HTML/CSS/JS) ──
 const char INDEX_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="en">
@@ -266,19 +248,6 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
 </html>
 )rawliteral";
 
-// ── FPGA Programming ────────────────────────────────────────────────────
-// Programs the SLG47910 FPGA with the bitstream stored in LittleFS.
-// Follows the power-cycle → load → enable sequence described in:
-//   https://blog.vicharak.in/7-ways-your-mcu-can-talk-to-fpga-on-shrike/
-//
-// The bitstream file lives at /bitstream.bin on the ESP32's flash filesystem.
-// Upload it using the Arduino IDE LittleFS upload tool or platformio.
-//
-// Phase 1: Power-cycle FPGA
-// Phase 2: Read bitstream from LittleFS, clock out via SPI
-// Phase 3: Pulse EN to activate the design
-// After this, the 4 SPI lines become our runtime data bus.
-
 #define BITSTREAM_PATH "/bitstream.bin"
 
 void programFPGA() {
@@ -412,16 +381,32 @@ void setup() {
   // Program FPGA bitstream (power-cycle → SPI load → enable)
   programFPGA();
 
-  // Re-init SPI for runtime communication (higher speed)
-  // After shrike.flash() releases the bus, the 4 SPI lines become our data channel
-  SPI.begin(FPGA_SPI_SCK, FPGA_SPI_MISO, FPGA_SPI_MOSI, FPGA_SPI_CS);
+  // SPI is already initialized from programFPGA(), just ready to use
   Serial.println("[SPI]  Runtime SPI ready (4 MHz)");
 
-  // Start Wi-Fi AP
-  Serial.printf("[WIFI] Starting AP: %s\n", AP_SSID);
-  WiFi.softAP(AP_SSID, AP_PASS);
-  IPAddress ip = WiFi.softAPIP();
-  Serial.printf("[WIFI] AP ready — connect and open http://%s\n", ip.toString().c_str());
+  // Start Wi-Fi
+  if (USE_AP_MODE) {
+    Serial.printf("[WIFI] Starting AP: %s\n", AP_SSID);
+    WiFi.mode(WIFI_AP);
+    WiFi.setSleep(false);
+    
+    if (!WiFi.softAP(AP_SSID, AP_PASS, 1)) {
+      Serial.println("[WIFI] ERROR: Failed to start AP!");
+    } else {
+      IPAddress ip = WiFi.softAPIP();
+      Serial.printf("[WIFI] AP ready — connect and open http://%s\n", ip.toString().c_str());
+    }
+  } else {
+    Serial.printf("[WIFI] Connecting to router: %s\n", WIFI_SSID);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.printf("\n[WIFI] Connected! Open http://%s in your browser\n", WiFi.localIP().toString().c_str());
+  }
 
   // Start web server
   server.on("/", handleRoot);

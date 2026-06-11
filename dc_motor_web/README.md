@@ -61,9 +61,9 @@ The MCU uses this bus to:
 
 | FPGA Pin | Function | L298N Pin | Wire Color (suggested) |
 |----------|----------|-----------|----------------------|
-| FPGA_IO8 | PWM output | ENA | Yellow |
-| FPGA_IO9 | Direction IN1 | IN1 | Green |
-| FPGA_IO10 | Direction IN2 | IN2 | Blue |
+| FPGA_IO17 | PWM output | ENA | Yellow |
+| FPGA_IO18 | Direction IN1 | IN1 | Green |
+| FPGA_IO0 | Direction IN2 | IN2 | Blue |
 | GND (header) | Common ground | GND | Black |
 
 These FPGA pins are on the **bottom dual-row FPGA connector** on the Shrike Fi board.
@@ -117,9 +117,17 @@ The MCU sends 2 bytes per transaction:
 1. Open **Go Configure Software Hub**
 2. Create a new project → select **SLG47910**
 3. Import `fpga/pwm_motor_ctrl.v`
-4. Assign pins to the FPGA (see FPGA ↔ L298N pin table above)
-5. Compile → generate `.hex` bitstream
-6. Rename the generated `.hex` file to `bitstream.bin`
+4. Open the **I/O Planner** tab. Filter by **GPIO**, **CLK**, and **OSC_ctrl**. Assign the Verilog variables in the **PORT** column to the corresponding physical **FUNCTION** rows:
+   - **`spi_sclk`** ➔ `GPIO012_IN [PIN 3]`
+   - **`spi_cs_n`** ➔ `GPIO013_IN [PIN 4]`
+   - **`spi_mosi`** ➔ `GPIO014_IN [PIN 5]`
+   - **`pwm_out`** ➔ `GPIO017_OUT`
+   - **`motor_in1`** ➔ `GPIO018_OUT`
+   - **`motor_in2`** ➔ `GPIO000_OUT`
+   - **`clk`** ➔ `OSC_CLK` (Internal 25MHz oscillator)
+   - **`rst_n`** ➔ `GPIO001_IN` (or any unused input). *Be sure to enable a Pull-Up resistor for this pin in the Floorplan tab so it stays inactive.*
+5. Click **Synthesize**, then **Generate Bitstream** to get the `.bin` file.
+6. Rename the generated file to `bitstream.bin`
 7. Place it in the `shrike_fi/data/` folder
 
 ### Step 2: Upload Firmware & LittleFS
