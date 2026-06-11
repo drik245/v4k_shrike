@@ -16,9 +16,10 @@
 const char* ssid = "YOUR_WIFI_NAME";
 const char* password = "YOUR_WIFI_PASSWORD";
 
-#define DHTPIN 4      // Digital pin connected to the DHT sensor
-#define DHTTYPE DHT11 // DHT 11
-#define LED_PIN 21    // Onboard LED
+// ── Hardware Pins (Shrike Fi) ──
+#define DHTPIN  4      // ESP_IO4
+#define DHTTYPE DHT11  // DHT 11
+#define LED_PIN 21     // ESP_IO21 (Onboard LED)
 
 DHT dht(DHTPIN, DHTTYPE);
 WebServer server(80);

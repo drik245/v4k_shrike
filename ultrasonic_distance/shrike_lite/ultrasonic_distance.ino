@@ -8,40 +8,40 @@
  * - Adafruit GFX Library
  */
 
-#include <Wire.h>
+#include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-// RP2040 standard GPIO pins
-#define TRIGGER_PIN 2
-#define ECHO_PIN 3
+// ── OLED SPI pins (Shrike Lite – RP2040, software SPI) ──
+#define OLED_MOSI  7   // RP_IO7  – SPI0 TX
+#define OLED_CLK   6   // RP_IO6  – SPI0 SCK
+#define OLED_DC    8   // RP_IO8
+#define OLED_RST   9   // RP_IO9
+#define OLED_CS    5   // RP_IO5  – SPI0 CSn
+
+// ── Ultrasonic Sensor Pins (Shrike Lite) ──
+// Using valid RP_IO pins from the Shrike header
+#define TRIGGER_PIN 26  // RP_IO26
+#define ECHO_PIN    27  // RP_IO27
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-#define OLED_RESET -1
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-// Shrike Lite (RP2040) Default I2C0
-#define I2C_SDA 0
-#define I2C_SCL 1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
 
 void setup() {
   Serial.begin(115200);
   pinMode(TRIGGER_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
-  Wire.setSDA(I2C_SDA);
-  Wire.setSCL(I2C_SCL);
-  Wire.begin();
-  
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+  if(!display.begin(SSD1306_SWITCHCAPVCC)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
   }
   
   display.clearDisplay();
   display.setTextSize(2);
-  display.setTextColor(WHITE);
+  display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 20);
   display.println("HC-SR04");
   display.display();
@@ -82,7 +82,7 @@ void loop() {
     // Draw bar graph
     int barWidth = map(distance, 0, 100, 0, 128);
     if (barWidth > 128) barWidth = 128;
-    display.fillRect(0, 50, barWidth, 10, WHITE);
+    display.fillRect(0, 50, barWidth, 10, SSD1306_WHITE);
   }
   
   display.display();

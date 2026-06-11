@@ -24,7 +24,8 @@ const char* password = "YOUR_WIFI_PASSWORD";
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-#define IR_PIN 4
+// ── IR Sensor Pin (Shrike Fi) ──
+#define IR_PIN 4 // ESP_IO4
 bool motionDetected = false;
 
 void IRAM_ATTR detectsMovement() {

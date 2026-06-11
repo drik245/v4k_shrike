@@ -13,7 +13,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
-#include <Wire.h>
+#include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
@@ -27,12 +27,15 @@ String countryCode = "US";
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-#define OLED_RESET -1
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-// Shrike Fi Default I2C
-#define I2C_SDA 14
-#define I2C_SCL 15
+// ── OLED SPI pins (Shrike Fi – ESP32-S3) ──
+#define OLED_MOSI 35   // ESP_IO35
+#define OLED_CLK  36   // ESP_IO36
+#define OLED_DC   37   // ESP_IO37
+#define OLED_RST  38   // ESP_IO38
+#define OLED_CS   34   // ESP_IO34
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
 
 String weatherStr = "-- C";
 unsigned long lastWeatherFetch = 0;
@@ -40,15 +43,14 @@ unsigned long lastWeatherFetch = 0;
 void setup() {
   Serial.begin(115200);
 
-  Wire.begin(I2C_SDA, I2C_SCL);
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+  if(!display.begin(SSD1306_SWITCHCAPVCC)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
   }
   
   display.clearDisplay();
   display.setTextSize(1);
-  display.setTextColor(WHITE);
+  display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 30);
   display.println("Connecting...");
   display.display();
@@ -90,8 +92,8 @@ void drawEyes(int xOffset = 0, int yOffset = 0, int blinkAmount = 0) {
   int rh = max(2, 40 - (blinkAmount * 2));
   
   // Draw rounded rects for cute eyes
-  display.fillRoundRect(lx, ly, 30, lh, 8, WHITE);
-  display.fillRoundRect(rx, ry, 30, rh, 8, WHITE);
+  display.fillRoundRect(lx, ly, 30, lh, 8, SSD1306_WHITE);
+  display.fillRoundRect(rx, ry, 30, rh, 8, SSD1306_WHITE);
   
   // Display weather at the very bottom
   display.setTextSize(1);

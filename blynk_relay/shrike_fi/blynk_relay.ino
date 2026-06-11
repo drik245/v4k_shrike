@@ -20,7 +20,8 @@
 char ssid[] = "YOUR_WIFI_NAME";
 char pass[] = "YOUR_WIFI_PASSWORD";
 
-#define RELAY_PIN 4
+// ── Relay Pin (Shrike Fi) ──
+#define RELAY_PIN 4 // ESP_IO4
 
 // This function is called every time the Virtual Pin 0 state changes in the Blynk app
 BLYNK_WRITE(V0) {
