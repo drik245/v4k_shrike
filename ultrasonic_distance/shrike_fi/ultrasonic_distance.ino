@@ -1,11 +1,21 @@
 /*
- * Ultrasonic Distance - Shrike Fi (ESP32-S3)
+ * Ultrasonic Distance – Shrike Fi (ESP32-S3)
  * ==========================================
- * Measures distance with HC-SR04 and displays it on an SSD1306 OLED.
- * 
+ * Board target : ESP32-S3 Dev Module (Generic)
+ *
+ * Measures distance with HC-SR04 and displays it on an SSD1306 OLED
+ * (SPI) with a numeric readout and a graphical fill bar.
+ *
+ * Wiring (Shrike Fi header):
+ *   HC-SR04 Trig → ESP_IO4  (GPIO 4)
+ *   HC-SR04 Echo → ESP_IO5  (GPIO 5)
+ *
+ * OLED SPI wiring (Shrike Fi header):
+ *   MOSI → ESP_IO35, CLK → ESP_IO36, DC → ESP_IO37,
+ *   RST  → ESP_IO38, CS  → ESP_IO34
+ *
  * Dependencies:
- * - Adafruit SSD1306
- * - Adafruit GFX Library
+ *   Adafruit SSD1306, Adafruit GFX
  */
 
 #include <SPI.h>
@@ -23,67 +33,96 @@
 #define TRIGGER_PIN 4  // ESP_IO4
 #define ECHO_PIN    5  // ESP_IO5
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
+#define SCREEN_WIDTH  128
+#define SCREEN_HEIGHT  64
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
+                         OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
+
+// ── Smoothing ──
+#define NUM_READINGS 5
+float readings[NUM_READINGS];
+int   readIndex = 0;
+bool  bufferFull = false;
+
+float readDistance() {
+  digitalWrite(TRIGGER_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIGGER_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIGGER_PIN, LOW);
+
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+  if (duration == 0) return -1.0;
+  return (duration / 2.0) / 29.1;
+}
+
+float getSmoothed(float newVal) {
+  readings[readIndex] = newVal;
+  readIndex = (readIndex + 1) % NUM_READINGS;
+  if (readIndex == 0) bufferFull = true;
+
+  int count = bufferFull ? NUM_READINGS : readIndex;
+  float sum = 0;
+  for (int i = 0; i < count; i++) sum += readings[i];
+  return sum / count;
+}
 
 void setup() {
   Serial.begin(115200);
   pinMode(TRIGGER_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
+  pinMode(ECHO_PIN,    INPUT);
 
-  if(!display.begin(SSD1306_SWITCHCAPVCC)) {
+  if (!display.begin(SSD1306_SWITCHCAPVCC)) {
     Serial.println(F("SSD1306 allocation failed"));
-    for(;;);
+    for (;;);
   }
-  
+
   display.clearDisplay();
-  display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 20);
+  display.setTextSize(2);
+  display.setCursor(12, 20);
   display.println("HC-SR04");
   display.display();
-  delay(2000);
+  delay(1500);
 }
 
 void loop() {
-  digitalWrite(TRIGGER_PIN, LOW);
-  delayMicroseconds(2);
-  
-  digitalWrite(TRIGGER_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIGGER_PIN, LOW);
-  
-  long duration = pulseIn(ECHO_PIN, HIGH, 30000); // 30ms timeout
-  
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setCursor(0, 10);
-  display.print("Distance:");
+  float raw = readDistance();
 
-  if (duration == 0) {
+  display.clearDisplay();
+
+  if (raw < 0) {
+    display.setTextSize(1);
+    display.setCursor(0, 8);
+    display.print("Distance:");
     display.setTextSize(2);
-    display.setCursor(0, 30);
-    display.print("Out of Range");
-    Serial.println("Out of Range");
+    display.setCursor(4, 26);
+    display.print("No echo");
+    Serial.println("[SONAR] Out of range");
   } else {
-    float distance = (duration / 2.0) / 29.1;
-    
-    display.setTextSize(2);
-    display.setCursor(0, 30);
-    display.print(distance, 1);
+    float dist = getSmoothed(raw);
+
+    display.setTextSize(1);
+    display.setCursor(0, 4);
+    display.print("Distance:");
+
+    display.setTextSize(3);
+    display.setCursor(0, 18);
+    display.print(dist, 1);
+    display.setTextSize(1);
     display.print(" cm");
-    Serial.print("Distance: ");
-    Serial.print(distance);
+
+    // ── Graphical bar ──
+    int barW = constrain(map((int)(dist * 10), 0, 2000, 0, 120), 0, 120);
+    display.drawRoundRect(3, 50, 122, 10, 3, SSD1306_WHITE);
+    display.fillRoundRect(4, 51, barW, 8, 2, SSD1306_WHITE);
+
+    Serial.print("[SONAR] ");
+    Serial.print(dist, 1);
     Serial.println(" cm");
-    
-    // Draw bar graph
-    int barWidth = map(distance, 0, 200, 0, 128);
-    if (barWidth > 128) barWidth = 128;
-    display.fillRect(0, 50, barWidth, 10, SSD1306_WHITE);
   }
-  
+
   display.display();
-  delay(500);
+  delay(200);
 }
