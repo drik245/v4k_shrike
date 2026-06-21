@@ -1,30 +1,21 @@
 /*
   ClimaPixel Weather Display - Shrike Fi (ESP32-S3)
 
-  Fetches current weather from OpenWeatherMap API and shows
-  temperature, humidity, description, and a thermometer bar
-  on an SSD1306 OLED (SPI).
+  Reads temperature and humidity from a DHT22 sensor and displays
+  them on an SSD1306 OLED with custom bitmap icons (thermometer
+  and water droplet). No WiFi needed, all local.
 
-  OLED SPI wiring:
-    MOSI - ESP_IO35, CLK - ESP_IO36, DC - ESP_IO37,
-    RST  - ESP_IO38, CS  - ESP_IO34
+  Wiring:
+    DHT22 data - ESP_IO4 (GPIO 4)
+    OLED SPI: MOSI-35, CLK-36, DC-37, RST-38, CS-34
 
-  Needs: ArduinoJson, Adafruit SSD1306, Adafruit GFX
+  Needs: DHTesp (beegee-tokyo), Adafruit SSD1306, Adafruit GFX
 */
 
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
-const char* ssid     = "YOUR_WIFI_NAME";
-const char* password = "YOUR_WIFI_PASSWORD";
-
-String apiKey      = "YOUR_OPENWEATHERMAP_API_KEY";
-String city        = "New York";
-String countryCode = "US";
+#include <DHTesp.h>
 
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT  64
@@ -36,20 +27,62 @@ String countryCode = "US";
 #define OLED_RST  38
 #define OLED_CS   34
 
+// sensor pin
+#define DHTPIN 4
+
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
                          OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
 
-unsigned long lastFetch = 0;
-const unsigned long FETCH_INTERVAL = 600000; // 10 minutes
-bool firstFetchDone = false;
+DHTesp dht;
 
-float  cachedTemp     = 0;
-int    cachedHumidity = 0;
-String cachedDesc     = "";
-bool   dataValid      = false;
+// thermometer icon (16x16)
+static const unsigned char PROGMEM iconTemp[] = {
+  0x01, 0x80,
+  0x02, 0x40,
+  0x02, 0x40,
+  0x02, 0x40,
+  0x03, 0xC0,
+  0x02, 0x40,
+  0x03, 0xC0,
+  0x02, 0x40,
+  0x03, 0xC0,
+  0x02, 0x40,
+  0x07, 0xE0,
+  0x0F, 0xF0,
+  0x0F, 0xF0,
+  0x0F, 0xF0,
+  0x07, 0xE0,
+  0x03, 0xC0,
+};
+
+// water droplet icon (16x16)
+static const unsigned char PROGMEM iconHum[] = {
+  0x01, 0x80, 
+  0x01, 0x80, 
+  0x03, 0xC0, 
+  0x03, 0xC0, 
+  0x07, 0xE0, 
+  0x07, 0xE0, 
+  0x0F, 0xF0, 
+  0x0F, 0xF0, 
+  0x1F, 0xF8, 
+  0x1F, 0xF8, 
+  0x1F, 0xF8, 
+  0x1F, 0xF8, 
+  0x0F, 0xF0, 
+  0x0F, 0xF0, 
+  0x07, 0xE0, 
+  0x01, 0x80, 
+};
+
+// cached readings for display smoothing
+float lastTemp = NAN;
+float lastHum  = NAN;
 
 void setup() {
   Serial.begin(115200);
+
+  dht.setup(DHTPIN, DHTesp::DHT22);
 
   if (!display.begin(SSD1306_SWITCHCAPVCC)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -57,109 +90,73 @@ void setup() {
   }
 
   display.clearDisplay();
-  display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10, 28);
-  display.println("Connecting WiFi...");
+
+  // splash screen
+  display.setTextSize(2);
+  display.setCursor(6, 8);
+  display.print("ClimaPixel");
+  display.setTextSize(1);
+  display.setCursor(24, 36);
+  display.print("Weather Station");
+  display.setCursor(36, 50);
+  display.print("Loading...");
   display.display();
-
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nwifi connected");
-
-  fetchWeather();
-  firstFetchDone = true;
-  lastFetch = millis();
+  delay(2000);
 }
 
 void loop() {
-  if (millis() - lastFetch > FETCH_INTERVAL) {
-    if (WiFi.status() == WL_CONNECTED) {
-      fetchWeather();
-    }
-    lastFetch = millis();
+  TempAndHumidity data = dht.getTempAndHumidity();
+
+  if (dht.getStatus() == DHTesp::ERROR_NONE) {
+    lastTemp = data.temperature;
+    lastHum  = data.humidity;
   }
-}
 
-void fetchWeather() {
   display.clearDisplay();
+
+  // title
   display.setTextSize(1);
-  display.setCursor(20, 28);
-  display.println("Fetching data...");
-  display.display();
+  int titleW = 13 * 6; // "Mini Weather" is 12 chars + margin
+  display.setCursor((128 - 12 * 6) / 2, 2);
+  display.print("Mini Weather");
 
-  HTTPClient http;
-  String url = "http://api.openweathermap.org/data/2.5/weather?q="
-             + city + "," + countryCode
-             + "&appid=" + apiKey + "&units=metric";
-  http.begin(url);
+  // separator line
+  display.drawLine(0, 12, 127, 12, SSD1306_WHITE);
 
-  int httpCode = http.GET();
-  if (httpCode > 0) {
-    String payload = http.getString();
-
-    StaticJsonDocument<1024> doc;
-    DeserializationError err = deserializeJson(doc, payload);
-
-    if (!err) {
-      cachedTemp     = doc["main"]["temp"];
-      cachedHumidity = doc["main"]["humidity"];
-      cachedDesc     = doc["weather"][0]["description"].as<String>();
-      dataValid      = true;
-      showWeather();
-    } else {
-      Serial.print("json error: ");
-      Serial.println(err.c_str());
-    }
-  } else {
-    Serial.print("http error: ");
-    Serial.println(httpCode);
-    display.clearDisplay();
-    display.setCursor(20, 28);
-    display.println("Fetch failed");
+  if (isnan(lastTemp)) {
+    // sensor error
+    display.setTextSize(1);
+    display.setCursor(10, 30);
+    display.print("Sensor Error");
     display.display();
+    delay(2000);
+    return;
   }
-  http.end();
-}
 
-void showWeather() {
-  display.clearDisplay();
-
-  // city
-  display.setTextSize(1);
-  display.setCursor(0, 0);
-  display.print(city);
-
-  // temperature
+  // temperature row
+  display.drawBitmap(8, 18, iconTemp, 16, 16, SSD1306_WHITE);
   display.setTextSize(2);
-  display.setCursor(0, 14);
-  display.print(cachedTemp, 1);
+  display.setCursor(30, 20);
+  display.print(lastTemp, 1);
   display.setTextSize(1);
   display.print(" C");
 
-  // humidity
+  // humidity row
+  display.drawBitmap(8, 40, iconHum, 16, 16, SSD1306_WHITE);
+  display.setTextSize(2);
+  display.setCursor(30, 42);
+  display.print(lastHum, 0);
   display.setTextSize(1);
-  display.setCursor(0, 36);
-  display.print("Hum: ");
-  display.print(cachedHumidity);
-  display.print("%");
-
-  // description
-  display.setCursor(0, 48);
-  String desc = cachedDesc;
-  if (desc.length() > 21) desc = desc.substring(0, 21);
-  display.print(desc);
-
-  // thermometer bar on the right side
-  int barX = 110;
-  int barTop = 2;
-  int barH = 56;
-  display.drawRect(barX, barTop, 14, barH, SSD1306_WHITE);
-  int fillH = constrain(map((int)(cachedTemp * 10), -100, 500, 0, barH - 4), 0, barH - 4);
-  display.fillRect(barX + 2, barTop + (barH - 4) - fillH + 2, 10, fillH, SSD1306_WHITE);
+  display.print(" %");
 
   display.display();
+
+  Serial.print("temp: ");
+  Serial.print(lastTemp, 1);
+  Serial.print("C  hum: ");
+  Serial.print(lastHum, 0);
+  Serial.println("%");
+
+  delay(2000);
 }
