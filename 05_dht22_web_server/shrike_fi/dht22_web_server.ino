@@ -1,58 +1,54 @@
 /*
- * DHT11 Web Server – Shrike Fi (ESP32-S3)
- * ========================================
- * Board target : ESP32-S3 Dev Module (Generic)
- *
- * Serves a styled webpage with real-time temperature, humidity,
- * and heat index from a DHT11 sensor. Also exposes a JSON API
- * endpoint at /api for programmatic access.
- *
- * Wiring (Shrike Fi header):
- *   DHT11 data → ESP_IO4  (GPIO 4)
- *   Onboard LED → ESP_IO21 (GPIO 21)
- *
- * Dependencies:
- *   DHT sensor library (Adafruit), Adafruit Unified Sensor
- */
+  DHT22 Web Server - Shrike Fi (ESP32-S3)
+
+  Creates a WiFi access point and serves a styled webpage with
+  real-time temperature, humidity, and heat index from a DHT22
+  sensor. Also has a JSON API at /api. No router needed, just
+  connect to the AP and open http://192.168.4.1
+
+  Wiring:
+    DHT22 data  - ESP_IO4 (GPIO 4)
+    Onboard LED - ESP_IO21 (GPIO 21)
+
+  Needs: DHTesp library (by beegee-tokyo)
+*/
 
 #include <WiFi.h>
 #include <WebServer.h>
-#include <DHT.h>
+#include <DHTesp.h>
 
-// --- Configuration ---
-const char* ssid     = "YOUR_WIFI_NAME";
-const char* password = "YOUR_WIFI_PASSWORD";
+// access point settings
+const char* apSSID = "Shrike-Weather";
+const char* apPass = "12345678"; // min 8 chars, or use "" for open
 
-// ── Hardware Pins (Shrike Fi) ──
-#define DHTPIN   4      // ESP_IO4
-#define DHTTYPE  DHT11
-#define LED_PIN  21     // ESP_IO21 (Onboard LED)
+// pins
+#define DHTPIN   4
+#define LED_PIN  21
 
-DHT dht(DHTPIN, DHTTYPE);
+DHTesp dht;
 WebServer server(80);
 
-// ── Cached readings ──
+// cached readings
 float lastTemp = NAN;
 float lastHum  = NAN;
 float lastHI   = NAN;
 unsigned long lastReadTime = 0;
-const unsigned long READ_INTERVAL = 2000; // DHT11 min sample period
+const unsigned long READ_INTERVAL = 2000;
 
 void readSensor() {
   if (millis() - lastReadTime < READ_INTERVAL) return;
   lastReadTime = millis();
 
-  float h = dht.readHumidity();
-  float t = dht.readTemperature();
+  TempAndHumidity data = dht.getTempAndHumidity();
 
-  if (!isnan(h) && !isnan(t)) {
-    lastHum  = h;
-    lastTemp = t;
-    lastHI   = dht.computeHeatIndex(t, h, false); // Celsius
+  if (dht.getStatus() == DHTesp::ERROR_NONE) {
+    lastHum  = data.humidity;
+    lastTemp = data.temperature;
+    lastHI   = dht.computeHeatIndex(data.temperature, data.humidity, false);
   }
 }
 
-// ── JSON API ──
+// json api endpoint
 void handleAPI() {
   readSensor();
   if (isnan(lastTemp)) {
@@ -65,7 +61,7 @@ void handleAPI() {
   server.send(200, "application/json", json);
 }
 
-// ── Web UI ──
+// web page
 void handleRoot() {
   readSensor();
 
@@ -93,15 +89,15 @@ void handleRoot() {
   hr{border:none;border-top:1px solid #2a2a3a;margin:12px 0}
 </style></head><body>
 <div class="card">
-  <h1>🌡️ Shrike Weather Station</h1>
+  <h1>Shrike Weather Station</h1>
   <div class="row"><div class="label">Temperature</div>
-    <div class="value temp">)rawliteral" + t + R"rawliteral(<span class="unit">°C</span></div></div>
+    <div class="value temp">)rawliteral" + t + R"rawliteral(<span class="unit">*C</span></div></div>
   <hr>
   <div class="row"><div class="label">Humidity</div>
     <div class="value hum">)rawliteral" + h + R"rawliteral(<span class="unit">%</span></div></div>
   <hr>
   <div class="row"><div class="label">Heat Index</div>
-    <div class="value hi">)rawliteral" + hi + R"rawliteral(<span class="unit">°C</span></div></div>
+    <div class="value hi">)rawliteral" + hi + R"rawliteral(<span class="unit">*C</span></div></div>
 </div></body></html>)rawliteral";
 
   server.send(200, "text/html", html);
@@ -112,24 +108,20 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
-  dht.begin();
+  dht.setup(DHTPIN, DHTesp::DHT22);
 
-  Serial.println("\n[DHT11] Connecting to WiFi...");
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
+  // start access point
+  WiFi.softAP(apSSID, apPass);
+  delay(100);
   digitalWrite(LED_PIN, HIGH);
-  Serial.println("\n[DHT11] WiFi connected!");
-  Serial.print("[DHT11] IP: ");
-  Serial.println(WiFi.localIP());
+  Serial.println("AP started: " + String(apSSID));
+  Serial.print("open http://");
+  Serial.println(WiFi.softAPIP());
 
   server.on("/",    handleRoot);
   server.on("/api", handleAPI);
   server.begin();
-  Serial.println("[DHT11] HTTP server started — open http://" + WiFi.localIP().toString());
+  Serial.println("server started");
 }
 
 void loop() {
