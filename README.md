@@ -10,7 +10,7 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 2 | [BLE Joystick Mouse](02_joystick_mouse/) | Shrike Fi, Joystick Module | BLE HID mouse using a joystick — requires Bluetooth |
 | 3 | [Servo Ctrl with OLED Gauge](03_servo_ctrl/) | Shrike Lite / Shrike Fi, Joystick Module, Servo Motor | Joystick-controlled servo with a live needle gauge on OLED |
 | 4 | [DC Motor Web Speed Control](04_dc_motor_web/) | Shrike Fi, L298N Driver, DC Motor, **FPGA** | FPGA hardware PWM + Wi-Fi web slider for motor speed/direction |
-| 5 | [DHT11 Web Server](05_dht11_web_server/) | Shrike Fi, DHT11 Sensor | Wi-Fi Web Server displaying temperature and humidity |
+| 5 | [DHT22 Web Server](05_dht22_web_server/) | Shrike Fi, DHT22 Sensor | Wi-Fi AP serving temperature and humidity webpage |
 | 6 | [ClimaPixel Weather](06_climapixel_weather/) | Shrike Fi, SSD1306 OLED | Wi-Fi Weather display using OpenWeatherMap API |
 | 7 | [Blynk IoT Relay](07_blynk_relay/) | Shrike Fi, Relay Module | Cloud-controlled relay using the Blynk App |
 | 8 | [NTP Digital Clock](08_ntp_clock/) | Shrike Fi, SSD1306 OLED | Wi-Fi connected digital clock synced to NTP servers |
