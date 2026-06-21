@@ -1,37 +1,32 @@
 /*
- * Ultrasonic Distance – Shrike Fi (ESP32-S3)
- * ==========================================
- * Board target : ESP32-S3 Dev Module (Generic)
- *
- * Measures distance with HC-SR04 and displays it on an SSD1306 OLED
- * (SPI) with a numeric readout and a graphical fill bar.
- *
- * Wiring (Shrike Fi header):
- *   HC-SR04 Trig → ESP_IO4  (GPIO 4)
- *   HC-SR04 Echo → ESP_IO5  (GPIO 5)
- *
- * OLED SPI wiring (Shrike Fi header):
- *   MOSI → ESP_IO35, CLK → ESP_IO36, DC → ESP_IO37,
- *   RST  → ESP_IO38, CS  → ESP_IO34
- *
- * Dependencies:
- *   Adafruit SSD1306, Adafruit GFX
- */
+  Ultrasonic Distance - Shrike Fi (ESP32-S3)
+
+  Measures distance with HC-SR04, shows it on an SSD1306 OLED (SPI)
+  with a big number readout and a fill bar. Uses a 5-sample
+  moving average for smoother readings.
+
+  Wiring:
+    HC-SR04 Trig - ESP_IO4 (GPIO 4)
+    HC-SR04 Echo - ESP_IO5 (GPIO 5)
+    OLED SPI: MOSI-35, CLK-36, DC-37, RST-38, CS-34
+
+  Needs: Adafruit SSD1306, Adafruit GFX
+*/
 
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-// ── OLED SPI pins (Shrike Fi – ESP32-S3) ──
-#define OLED_MOSI 35   // ESP_IO35
-#define OLED_CLK  36   // ESP_IO36
-#define OLED_DC   37   // ESP_IO37
-#define OLED_RST  38   // ESP_IO38
-#define OLED_CS   34   // ESP_IO34
+// oled spi pins
+#define OLED_MOSI 35
+#define OLED_CLK  36
+#define OLED_DC   37
+#define OLED_RST  38
+#define OLED_CS   34
 
-// ── Ultrasonic Sensor Pins (Shrike Fi) ──
-#define TRIGGER_PIN 4  // ESP_IO4
-#define ECHO_PIN    5  // ESP_IO5
+// ultrasonic pins
+#define TRIGGER_PIN 4
+#define ECHO_PIN    5
 
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT  64
@@ -39,7 +34,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
                          OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
 
-// ── Smoothing ──
+// smoothing
 #define NUM_READINGS 5
 float readings[NUM_READINGS];
 int   readIndex = 0;
@@ -99,7 +94,7 @@ void loop() {
     display.setTextSize(2);
     display.setCursor(4, 26);
     display.print("No echo");
-    Serial.println("[SONAR] Out of range");
+    Serial.println("out of range");
   } else {
     float dist = getSmoothed(raw);
 
@@ -113,12 +108,11 @@ void loop() {
     display.setTextSize(1);
     display.print(" cm");
 
-    // ── Graphical bar ──
+    // bar graph
     int barW = constrain(map((int)(dist * 10), 0, 2000, 0, 120), 0, 120);
     display.drawRoundRect(3, 50, 122, 10, 3, SSD1306_WHITE);
     display.fillRoundRect(4, 51, barW, 8, 2, SSD1306_WHITE);
 
-    Serial.print("[SONAR] ");
     Serial.print(dist, 1);
     Serial.println(" cm");
   }

@@ -1,27 +1,22 @@
 /*
- * Telegram Alert – Shrike Fi (ESP32-S3)
- * =====================================
- * Board target : ESP32-S3 Dev Module (Generic)
- *
- * Uses an IR sensor (active LOW) to detect motion and sends a
- * Telegram message via the Bot API. Includes a cooldown timer,
- * an LED flash on detection, and periodic incoming message checks
- * so you can send /status to query the device.
- *
- * Wiring (Shrike Fi header):
- *   IR sensor OUT → ESP_IO4  (GPIO 4, active LOW)
- *   Status LED    → ESP_IO21 (GPIO 21)
- *
- * Dependencies:
- *   UniversalTelegramBot, ArduinoJson
- */
+  Telegram Alert - Shrike Fi (ESP32-S3)
+
+  IR sensor detects motion and sends a Telegram message.
+  Has a cooldown timer, LED flash on detection, motion counter,
+  and responds to /status and /start commands.
+
+  Wiring:
+    IR sensor OUT - ESP_IO4 (GPIO 4, active low)
+    Status LED    - ESP_IO21 (GPIO 21)
+
+  Needs: UniversalTelegramBot, ArduinoJson
+*/
 
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
 #include <ArduinoJson.h>
 
-// --- Configuration ---
 const char* ssid     = "YOUR_WIFI_NAME";
 const char* password = "YOUR_WIFI_PASSWORD";
 
@@ -31,18 +26,18 @@ const char* password = "YOUR_WIFI_PASSWORD";
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-// ── Hardware Pins (Shrike Fi) ──
-#define IR_PIN   4   // ESP_IO4
-#define LED_PIN  21  // ESP_IO21
+// pins
+#define IR_PIN   4
+#define LED_PIN  21
 
 volatile bool motionDetected = false;
 unsigned long lastAlertTime = 0;
 const unsigned long COOLDOWN_MS = 10000; // 10s between alerts
 
 unsigned long lastBotCheck = 0;
-const unsigned long BOT_CHECK_MS = 5000; // check incoming messages every 5s
+const unsigned long BOT_CHECK_MS = 5000; // check messages every 5s
 
-unsigned long motionCount = 0; // total detections since boot
+unsigned long motionCount = 0;
 
 void IRAM_ATTR onMotion() {
   motionDetected = true;
@@ -64,12 +59,12 @@ void handleNewMessages(int numNew) {
     text.toLowerCase();
 
     if (text == "/status") {
-      String msg = "🟢 Shrike Fi Online\n";
+      String msg = "Shrike Fi Online\n";
       msg += "Motion count: " + String(motionCount) + "\n";
       msg += "Uptime: " + String(millis() / 60000) + " min";
       bot.sendMessage(chat_id, msg, "");
     } else if (text == "/start") {
-      bot.sendMessage(chat_id, "👋 Shrike Fi Motion Alert\nCommands:\n/status — device info", "");
+      bot.sendMessage(chat_id, "Shrike Fi Motion Alert\nCommands:\n/status - device info", "");
     }
   }
 }
@@ -83,7 +78,7 @@ void setup() {
 
   attachInterrupt(digitalPinToInterrupt(IR_PIN), onMotion, FALLING);
 
-  Serial.print("[TG] Connecting to WiFi...");
+  Serial.print("connecting to wifi...");
   WiFi.begin(ssid, password);
   client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
 
@@ -91,14 +86,14 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\n[TG] WiFi connected");
+  Serial.println("\nwifi connected");
 
   flashLED(3, 100);
-  bot.sendMessage(CHAT_ID, "✅ Shrike Fi: Motion Alert System Started!", "");
+  bot.sendMessage(CHAT_ID, "Shrike Fi: Motion Alert System Started!", "");
 }
 
 void loop() {
-  // ── Motion detection ──
+  // motion detection
   if (motionDetected) {
     motionDetected = false;
 
@@ -106,16 +101,16 @@ void loop() {
       motionCount++;
       lastAlertTime = millis();
 
-      Serial.println("[TG] Motion! Sending alert...");
+      Serial.println("motion detected, sending alert");
       flashLED(2, 80);
       bot.sendMessage(CHAT_ID,
-        "🚨 ALERT: Motion detected! (#" + String(motionCount) + ")", "");
+        "ALERT: Motion detected! (#" + String(motionCount) + ")", "");
     } else {
-      Serial.println("[TG] Motion ignored (cooldown)");
+      Serial.println("motion ignored (cooldown)");
     }
   }
 
-  // ── Incoming message check ──
+  // check incoming messages
   if (millis() - lastBotCheck > BOT_CHECK_MS) {
     lastBotCheck = millis();
     int numNew = bot.getUpdates(bot.last_message_received + 1);

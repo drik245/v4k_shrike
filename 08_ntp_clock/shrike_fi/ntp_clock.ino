@@ -1,22 +1,16 @@
 /*
- * NTP Digital Clock – Shrike Fi (ESP32-S3)
- * ========================================
- * Board target : ESP32-S3 Dev Module (Generic)
- *
- * Connects to WiFi, syncs with NTP, and displays the time on an
- * SSD1306 OLED (SPI) with a date row, large time, day-of-week,
- * and a seconds progress bar.
- *
- * OLED SPI wiring (Shrike Fi header):
- *   MOSI → ESP_IO35  (GPIO 35)
- *   CLK  → ESP_IO36  (GPIO 36)
- *   DC   → ESP_IO37  (GPIO 37)
- *   RST  → ESP_IO38  (GPIO 38)
- *   CS   → ESP_IO34  (GPIO 34)
- *
- * Dependencies:
- *   Adafruit SSD1306, Adafruit GFX
- */
+  NTP Digital Clock - Shrike Fi (ESP32-S3)
+
+  Connects to WiFi, syncs with NTP, and shows the time on an
+  SSD1306 OLED (SPI) with date, day of week, large time display,
+  and a seconds progress bar.
+
+  OLED SPI wiring:
+    MOSI - ESP_IO35, CLK - ESP_IO36, DC - ESP_IO37,
+    RST  - ESP_IO38, CS  - ESP_IO34
+
+  Needs: Adafruit SSD1306, Adafruit GFX
+*/
 
 #include <WiFi.h>
 #include "time.h"
@@ -24,7 +18,6 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-// --- Configuration ---
 const char* ssid     = "YOUR_WIFI_NAME";
 const char* password = "YOUR_WIFI_PASSWORD";
 
@@ -35,12 +28,12 @@ const int   daylightOffset_s = 0;
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT  64
 
-// ── OLED SPI pins (Shrike Fi – ESP32-S3) ──
-#define OLED_MOSI 35   // ESP_IO35
-#define OLED_CLK  36   // ESP_IO36
-#define OLED_DC   37   // ESP_IO37
-#define OLED_RST  38   // ESP_IO38
-#define OLED_CS   34   // ESP_IO34
+// oled spi pins
+#define OLED_MOSI 35
+#define OLED_CLK  36
+#define OLED_DC   37
+#define OLED_RST  38
+#define OLED_CS   34
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
                          OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
@@ -67,25 +60,25 @@ void showTime() {
 
   display.clearDisplay();
 
-  // ── Border ──
+  // border
   display.drawRoundRect(0, 0, 128, 64, 4, SSD1306_WHITE);
 
-  // ── Day of week ──
+  // day of week
   display.setTextSize(1);
   int dayLen = strlen(DAYS[ti.tm_wday]) * 6;
   display.setCursor((128 - dayLen) / 2, 4);
   display.print(DAYS[ti.tm_wday]);
 
-  // ── Date ──
+  // date
   display.setCursor(34, 16);
   display.print(dateBuf);
 
-  // ── Time (large) ──
+  // time (large)
   display.setTextSize(2);
   display.setCursor(8, 28);
   display.print(timeBuf);
 
-  // ── Seconds progress bar ──
+  // seconds progress bar
   int barW = map(ti.tm_sec, 0, 59, 0, 118);
   display.fillRoundRect(5, 52, barW, 6, 2, SSD1306_WHITE);
   display.drawRoundRect(5, 52, 118, 6, 2, SSD1306_WHITE);
@@ -113,7 +106,7 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\n[NTP] WiFi connected");
+  Serial.println("\nwifi connected");
 
   display.clearDisplay();
   display.setCursor(10, 28);
@@ -122,14 +115,14 @@ void setup() {
 
   configTime(gmtOffset_sec, daylightOffset_s, ntpServer);
 
-  // Wait for first sync
+  // wait for first sync
   struct tm t;
   int retries = 0;
   while (!getLocalTime(&t) && retries < 10) {
     delay(500);
     retries++;
   }
-  Serial.println("[NTP] Time synced");
+  Serial.println("time synced");
 }
 
 void loop() {

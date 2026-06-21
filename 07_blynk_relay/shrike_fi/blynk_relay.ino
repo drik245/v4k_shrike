@@ -1,23 +1,18 @@
 /*
- * Blynk Relay Control – Shrike Fi (ESP32-S3)
- * ==========================================
- * Board target : ESP32-S3 Dev Module (Generic)
- *
- * Cloud-controlled relay using the Blynk IoT platform.
- * Features:
- *   - Virtual Pin V0 from Blynk app toggles the relay
- *   - Physical button on ESP_IO3 for manual override
- *   - LED indicator on ESP_IO21 mirrors relay state
- *   - Syncs physical toggle back to the Blynk app widget
- *
- * Wiring (Shrike Fi header):
- *   Relay signal → ESP_IO4  (GPIO 4)
- *   Manual button → ESP_IO3  (GPIO 3, active LOW with pull-up)
- *   Status LED   → ESP_IO21 (GPIO 21)
- *
- * Dependencies:
- *   Blynk library by Volodymyr Shymanskyy
- */
+  Blynk Relay Control - Shrike Fi (ESP32-S3)
+
+  Cloud-controlled relay using Blynk IoT platform.
+  V0 widget in the app toggles the relay. Physical button
+  on the board overrides and syncs state back to Blynk.
+  LED mirrors relay state.
+
+  Wiring:
+    Relay signal - ESP_IO4 (GPIO 4)
+    Manual button - ESP_IO3 (GPIO 3, active low, internal pullup)
+    Status LED   - ESP_IO21 (GPIO 21)
+
+  Needs: Blynk library (by Volodymyr Shymanskyy)
+*/
 
 #define BLYNK_TEMPLATE_ID   "TMPLxxxxxx"
 #define BLYNK_DEVICE_NAME   "Shrike Relay"
@@ -32,10 +27,10 @@
 char ssid[] = "YOUR_WIFI_NAME";
 char pass[] = "YOUR_WIFI_PASSWORD";
 
-// ── Hardware Pins (Shrike Fi) ──
-#define RELAY_PIN  4   // ESP_IO4
-#define BUTTON_PIN 3   // ESP_IO3  (manual override)
-#define LED_PIN    21  // ESP_IO21 (status indicator)
+// pins
+#define RELAY_PIN  4
+#define BUTTON_PIN 3
+#define LED_PIN    21
 
 bool relayState       = false;
 int  lastButtonState  = HIGH;
@@ -43,13 +38,13 @@ int  buttonState      = HIGH;
 unsigned long lastDebounce = 0;
 const unsigned long DEBOUNCE_MS = 50;
 
-// Called from Blynk app when V0 changes
+// called from blynk app when V0 changes
 BLYNK_WRITE(V0) {
   int val = param.asInt();
   relayState = (val == 1);
   applyRelayState();
-  Serial.print("[BLYNK] V0 → Relay ");
-  Serial.println(relayState ? "ON" : "OFF");
+  Serial.print("blynk V0: relay ");
+  Serial.println(relayState ? "on" : "off");
 }
 
 void applyRelayState() {
@@ -67,9 +62,9 @@ void setup() {
   digitalWrite(RELAY_PIN, LOW);
   digitalWrite(LED_PIN,   LOW);
 
-  Serial.println("[RELAY] Connecting to Blynk...");
+  Serial.println("connecting to blynk...");
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
-  Serial.println("[RELAY] Connected!");
+  Serial.println("connected");
 }
 
 void loop() {
@@ -88,15 +83,14 @@ void handleButton() {
     if (reading != buttonState) {
       buttonState = reading;
 
-      // Falling edge → button pressed (active LOW)
       if (buttonState == LOW) {
         relayState = !relayState;
         applyRelayState();
 
-        // Push state back to Blynk widget
+        // push state back to blynk widget
         Blynk.virtualWrite(V0, relayState ? 1 : 0);
-        Serial.print("[BTN] Manual toggle → Relay ");
-        Serial.println(relayState ? "ON" : "OFF");
+        Serial.print("button toggle: relay ");
+        Serial.println(relayState ? "on" : "off");
       }
     }
   }

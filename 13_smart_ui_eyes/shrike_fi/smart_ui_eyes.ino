@@ -1,25 +1,20 @@
 /*
- * Smart UI Eyes – Shrike Fi (ESP32-S3)
- * ====================================
- * Board target : ESP32-S3 Dev Module (Generic)
- *
- * Interactive OLED UI with animated robot eyes, touch-based menu
- * navigation, NTP clock, and live weather data.
- *
- * States:
- *   WELCOME → EYES (idle) → MENU → TIME / WEATHER → back to EYES
- *
- * Touch controls:
- *   NEXT   (ESP_IO1, Touch IO 1) — cycle menu / manual NTP sync
- *   SELECT (ESP_IO2, Touch IO 2) — select option / go back
- *
- * OLED SPI wiring (Shrike Fi header):
- *   MOSI → ESP_IO35, CLK → ESP_IO36, DC → ESP_IO37,
- *   RST  → ESP_IO38, CS  → ESP_IO34
- *
- * Dependencies:
- *   Adafruit SSD1306, Adafruit GFX, ArduinoJson
- */
+  Smart UI Eyes - Shrike Fi (ESP32-S3)
+
+  Interactive OLED UI with animated robot eyes, touch-based menu,
+  NTP clock, and live weather data.
+
+  States: WELCOME > EYES (idle) > MENU > TIME / WEATHER > back to EYES
+
+  Touch controls:
+    NEXT   (ESP_IO1, Touch IO 1) - cycle menu / manual NTP sync
+    SELECT (ESP_IO2, Touch IO 2) - select option / go back
+
+  OLED SPI wiring:
+    MOSI-35, CLK-36, DC-37, RST-38, CS-34
+
+  Needs: Adafruit SSD1306, Adafruit GFX, ArduinoJson
+*/
 
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -29,7 +24,6 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-//   Configuration  
 const char* ssid     = "YOUR_WIFI_NAME";
 const char* password = "YOUR_WIFI_PASSWORD";
 
@@ -38,37 +32,37 @@ String city        = "New York";
 String countryCode = "US";
 
 const char* ntpServer     = "pool.ntp.org";
-const long  gmtOffset_sec = 19800;  // IST +5:30
+const long  gmtOffset_sec = 19800;
 const int   dstOffset_sec = 0;
 
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT  64
 
+// oled spi pins
 #define OLED_MOSI 35
 #define OLED_CLK  36
 #define OLED_DC   37
 #define OLED_RST  38
 #define OLED_CS   34
 
-//   Touch pins  
-#define TOUCH_PIN   1   // ESP_IO1
+// touch pins
+#define TOUCH_NEXT   1
+#define TOUCH_SELECT 2
 #define TOUCH_THRESHOLD 30000
-#define DEBOUNCE 50
-#define DOUBLE_TAP 300
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
                          OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
 
-//   State machine  
+// state machine
 enum State { ST_WELCOME, ST_EYES, ST_MENU, ST_TIME, ST_WEATHER };
 State currentState = ST_WELCOME;
 
-//   Touch  
-bool lastTouch = false;
-bool waitingSecond = false;
-unsigned long lastTapTime = 0, lastReleaseTime = 0;
+// touch debounce
+bool lastNext = false, lastSelect = false;
+unsigned long lastNextDebounce = 0, lastSelectDebounce = 0;
+const unsigned long TOUCH_DEBOUNCE = 200;
 
-//   Eyes animation  
+// eyes animation
 unsigned long lastEyeAction = 0;
 unsigned long eyeActionInterval = 2000;
 int eyeXoff = 0, eyeYoff = 0, eyeBlink = 0;
@@ -76,47 +70,50 @@ bool eyesBlinking = false;
 int blinkPhase = 0;
 unsigned long lastBlinkStep = 0;
 
-//   Menu  
+// menu
 int menuIndex = 0;
 const int MENU_ITEMS = 2;
 const char* menuLabels[] = {"Clock", "Weather"};
 
-//   Weather cache  
+// weather cache
 String weatherTemp = "--";
 String weatherHum  = "--";
 String weatherDesc = "--";
 unsigned long lastWeatherFetch = 0;
 
-//   Welcome timer  
+// welcome timer
 unsigned long welcomeStart = 0;
 
-//  Touch helpers  
-int readTap() {
-  static unsigned long lastReadTime = 0;
-  unsigned long now = millis();
 
-  if (now - lastReadTime < 20) return 0;
-  lastReadTime = now;
-
-  bool cur = touchRead(TOUCH_PIN) < TOUCH_THRESHOLD;
-  int result = 0;
-
-  if (cur && !lastTouch && (now - lastReleaseTime > DEBOUNCE)) {
-    if (waitingSecond && (now - lastTapTime < DOUBLE_TAP)) {
-      result = 2; waitingSecond = false;
-    } else {
-      lastTapTime = now; waitingSecond = true;
-    }
-  }
-  if (waitingSecond && !cur && (now - lastTapTime > DOUBLE_TAP)) {
-    result = 1; waitingSecond = false;
-  }
-  if (!cur && lastTouch) lastReleaseTime = now;
-  lastTouch = cur;
-  return result;
+// touch helpers
+bool readNext() {
+  return touchRead(TOUCH_NEXT) < TOUCH_THRESHOLD;
 }
-               
-//  Network 
+bool readSelect() {
+  return touchRead(TOUCH_SELECT) < TOUCH_THRESHOLD;
+}
+bool nextPressed() {
+  bool cur = readNext();
+  if (cur && !lastNext && (millis() - lastNextDebounce > TOUCH_DEBOUNCE)) {
+    lastNextDebounce = millis();
+    lastNext = cur;
+    return true;
+  }
+  lastNext = cur;
+  return false;
+}
+bool selectPressed() {
+  bool cur = readSelect();
+  if (cur && !lastSelect && (millis() - lastSelectDebounce > TOUCH_DEBOUNCE)) {
+    lastSelectDebounce = millis();
+    lastSelect = cur;
+    return true;
+  }
+  lastSelect = cur;
+  return false;
+}
+
+
 void fetchWeather() {
   HTTPClient http;
   String url = "http://api.openweathermap.org/data/2.5/weather?q="
@@ -139,7 +136,7 @@ void fetchWeather() {
   lastWeatherFetch = millis();
 }
 
-// Drawing functions 
+
 void drawWelcome() {
   display.clearDisplay();
   display.setTextSize(2);
@@ -161,11 +158,11 @@ void drawEyes(int xOff, int yOff, int blink) {
   int ey = 8 + yOff + blink;
   int eh = max(2, 44 - blink * 2);
 
-  // Eyes with rounded corners
+  // eyes
   display.fillRoundRect(lx, ey, 30, eh, 10, SSD1306_WHITE);
   display.fillRoundRect(rx, ey, 30, eh, 10, SSD1306_WHITE);
 
-  // Pupils (only when not blinking)
+  // pupils (only when not blinking)
   if (eh > 10) {
     int px = 8 + constrain(xOff, -5, 5);
     int py = (eh / 2) - 4 + constrain(yOff, -3, 3);
@@ -173,7 +170,7 @@ void drawEyes(int xOff, int yOff, int blink) {
     display.fillCircle(rx + px + 7, ey + py + 4, 4, SSD1306_BLACK);
   }
 
-  // Bottom status bar
+  // bottom bar
   display.setTextSize(1);
   display.setCursor(0, 56);
   display.print("[NEXT]");
@@ -273,21 +270,21 @@ void drawWeather() {
   display.display();
 }
 
-//  Eyes animation 
+
+// eyes animation logic
 void updateEyes() {
-  // Blink animation 
   if (eyesBlinking) {
     if (millis() - lastBlinkStep > 25) {
       lastBlinkStep = millis();
       if (blinkPhase < 22) {
-        blinkPhase = min(22, blinkPhase + 5);  // ← cap at 22
+        blinkPhase += 5;
       } else {
         blinkPhase -= 5;
         if (blinkPhase <= 0) {
           blinkPhase = 0;
           eyesBlinking = false;
-  }
-}
+        }
+      }
       eyeBlink = blinkPhase;
     }
     drawEyes(eyeXoff, eyeYoff, eyeBlink);
@@ -300,7 +297,6 @@ void updateEyes() {
 
     int action = random(0, 10);
     if (action < 3) {
-      // Blink
       eyesBlinking = true;
       blinkPhase = 0;
       lastBlinkStep = millis();
@@ -322,7 +318,7 @@ void updateEyes() {
   drawEyes(eyeXoff, eyeYoff, 0);
 }
 
-//  Setup & Loop 
+
 void setup() {
   Serial.begin(115200);
 
@@ -340,11 +336,10 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
-  Serial.println("[EYES] WiFi connected");
+  Serial.println("wifi connected");
 
   configTime(gmtOffset_sec, dstOffset_sec, ntpServer);
 
-  // Wait for NTP
   struct tm t;
   int retries = 0;
   while (!getLocalTime(&t) && retries < 10) { delay(500); retries++; }
@@ -356,16 +351,14 @@ void setup() {
 }
 
 void loop() {
-  int tap = readTap();
   switch (currentState) {
 
     case ST_EYES:
       updateEyes();
-      if (tap == 2) {
-        // doesn't do anything special, just triggers a blink
+      if (nextPressed()) {
         eyesBlinking = true; blinkPhase = 0; lastBlinkStep = millis();
       }
-      if (tap == 1) {
+      if (selectPressed()) {
         menuIndex = 0;
         currentState = ST_MENU;
         drawMenu();
@@ -373,11 +366,11 @@ void loop() {
       break;
 
     case ST_MENU:
-      if (tap == 2) {
+      if (nextPressed()) {
         menuIndex = (menuIndex + 1) % MENU_ITEMS;
         drawMenu();
       }
-      if (tap == 1) {
+      if (selectPressed()) {
         if (menuIndex == 0) {
           currentState = ST_TIME;
           drawTime();
@@ -389,23 +382,23 @@ void loop() {
       }
       break;
 
-    case ST_TIME: {
-      static unsigned long lastTimeDraw = 0;
-      if (millis() - lastTimeDraw > 1000) {
-        lastTimeDraw = millis();
-        drawTime();
+    case ST_TIME:
+      drawTime();
+      if (nextPressed()) {
+        configTime(gmtOffset_sec, dstOffset_sec, ntpServer);
       }
-      if (tap == 2) configTime(gmtOffset_sec, dstOffset_sec, ntpServer);
-      if (tap == 1) currentState = ST_EYES;
+      if (selectPressed()) {
+        currentState = ST_EYES;
+      }
+      delay(1000);
       break;
-    }
 
     case ST_WEATHER:
-      if (tap == 2) {
+      if (nextPressed()) {
         fetchWeather();
         drawWeather();
       }
-      if (tap == 1) {
+      if (selectPressed()) {
         currentState = ST_EYES;
       }
       break;

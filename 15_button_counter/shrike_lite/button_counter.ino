@@ -1,48 +1,41 @@
 /*
- * TM1637 Button-Press Counter – Shrike Lite (RP2040)
- * ===================================================
- * Board target : Raspberry Pi Pico (Generic RP2040)
- * Core         : arduino-pico (Earle Philhower)
- *
- * A simple button-based digital counter using a TM1637 4-digit
- * seven-segment display. Press the button to increment, hold to
- * reset. Count range: 0000 → 9999 (wraps around).
- *
- * Wiring (Shrike Lite header):
- *   TM1637 CLK → RP_IO10  (GPIO 10)
- *   TM1637 DIO → RP_IO11  (GPIO 11)
- *   TM1637 VCC → 3.3V
- *   TM1637 GND → GND
- *   Button     → RP_IO28  (GPIO 28, active LOW with internal pull-up)
- *
- * Dependencies:
- *   TM1637Display library (by Avishay Orpaz)
- */
+  TM1637 Button-Press Counter - Shrike Lite (RP2040)
+
+  Press the button to increment a counter on a TM1637 display.
+  Hold the button for 1.5s to reset. Wraps at 9999.
+
+  Wiring:
+    TM1637 CLK - RP_IO10 (GPIO 10)
+    TM1637 DIO - RP_IO11 (GPIO 11)
+    Button     - RP_IO28 (GPIO 28, active low, internal pullup)
+
+  Needs: TM1637Display library (by Avishay Orpaz)
+*/
 
 #include <TM1637Display.h>
 
-// ── Hardware Pins (Shrike Lite) ──
-#define TM_CLK     10  // RP_IO10
-#define TM_DIO     11  // RP_IO11
-#define BUTTON_PIN 28  // RP_IO28 (active LOW, internal pull-up)
+// pins
+#define TM_CLK     10
+#define TM_DIO     11
+#define BUTTON_PIN 28
 
 TM1637Display tm(TM_CLK, TM_DIO);
 
 int count = 0;
 
-// ── Debounce state ──
+// debounce
 int  buttonState     = HIGH;
 int  lastReading     = HIGH;
 unsigned long lastDebounce = 0;
 const unsigned long DEBOUNCE_MS = 50;
 
-// ── Long-press detection ──
+// long press
 unsigned long pressStart = 0;
 bool          pressed    = false;
-const unsigned long LONG_PRESS_MS = 1500; // hold 1.5s to reset
+const unsigned long LONG_PRESS_MS = 1500;
 
 void showCount() {
-  tm.showNumberDecEx(count, 0x00, true); // leading zeros, no colon
+  tm.showNumberDecEx(count, 0x00, true);
 }
 
 void setup() {
@@ -50,17 +43,15 @@ void setup() {
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
-  tm.setBrightness(5); // 0-7
-
-  // Show "0000" on start
+  tm.setBrightness(5);
   showCount();
-  Serial.println("[CNT] Button Counter ready — press to count, hold to reset");
+  Serial.println("button counter ready, press to count, hold to reset");
 }
 
 void loop() {
   int reading = digitalRead(BUTTON_PIN);
 
-  // ── Debounce ──
+  // debounce
   if (reading != lastReading) {
     lastDebounce = millis();
   }
@@ -70,23 +61,19 @@ void loop() {
       buttonState = reading;
 
       if (buttonState == LOW) {
-        // Button just pressed — start timer
         pressStart = millis();
         pressed = true;
       } else {
-        // Button released
         if (pressed) {
           unsigned long held = millis() - pressStart;
 
           if (held >= LONG_PRESS_MS) {
-            // Long press → reset
             count = 0;
-            Serial.println("[CNT] RESET → 0000");
+            Serial.println("reset to 0000");
           } else {
-            // Short press → increment
             count++;
-            if (count > 9999) count = 0; // wrap
-            Serial.print("[CNT] Count: ");
+            if (count > 9999) count = 0;
+            Serial.print("count: ");
             Serial.println(count);
           }
 
@@ -97,7 +84,7 @@ void loop() {
     }
   }
 
-  // ── Visual feedback: blink display while held long enough ──
+  // blink display when held long enough to show reset is ready
   if (pressed && buttonState == LOW) {
     unsigned long held = millis() - pressStart;
     if (held >= LONG_PRESS_MS) {

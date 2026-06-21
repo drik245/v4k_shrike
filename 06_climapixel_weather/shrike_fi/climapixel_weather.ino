@@ -1,22 +1,16 @@
 /*
- * ClimaPixel Weather Display – Shrike Fi (ESP32-S3)
- * =================================================
- * Board target : ESP32-S3 Dev Module (Generic)
- *
- * Fetches current weather from OpenWeatherMap API and displays
- * temperature, humidity, description, and a graphical thermometer
- * bar on an SSD1306 OLED (SPI).
- *
- * OLED SPI wiring (Shrike Fi header):
- *   MOSI → ESP_IO35  (GPIO 35)
- *   CLK  → ESP_IO36  (GPIO 36)
- *   DC   → ESP_IO37  (GPIO 37)
- *   RST  → ESP_IO38  (GPIO 38)
- *   CS   → ESP_IO34  (GPIO 34)
- *
- * Dependencies:
- *   ArduinoJson, Adafruit SSD1306, Adafruit GFX
- */
+  ClimaPixel Weather Display - Shrike Fi (ESP32-S3)
+
+  Fetches current weather from OpenWeatherMap API and shows
+  temperature, humidity, description, and a thermometer bar
+  on an SSD1306 OLED (SPI).
+
+  OLED SPI wiring:
+    MOSI - ESP_IO35, CLK - ESP_IO36, DC - ESP_IO37,
+    RST  - ESP_IO38, CS  - ESP_IO34
+
+  Needs: ArduinoJson, Adafruit SSD1306, Adafruit GFX
+*/
 
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -25,7 +19,6 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-// --- Configuration ---
 const char* ssid     = "YOUR_WIFI_NAME";
 const char* password = "YOUR_WIFI_PASSWORD";
 
@@ -36,12 +29,12 @@ String countryCode = "US";
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT  64
 
-// ── OLED SPI pins (Shrike Fi – ESP32-S3) ──
-#define OLED_MOSI 35   // ESP_IO35
-#define OLED_CLK  36   // ESP_IO36
-#define OLED_DC   37   // ESP_IO37
-#define OLED_RST  38   // ESP_IO38
-#define OLED_CS   34   // ESP_IO34
+// oled spi pins
+#define OLED_MOSI 35
+#define OLED_CLK  36
+#define OLED_DC   37
+#define OLED_RST  38
+#define OLED_CS   34
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
                          OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
@@ -75,7 +68,7 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\n[CLIMA] WiFi connected");
+  Serial.println("\nwifi connected");
 
   fetchWeather();
   firstFetchDone = true;
@@ -118,11 +111,11 @@ void fetchWeather() {
       dataValid      = true;
       showWeather();
     } else {
-      Serial.print("[CLIMA] JSON error: ");
+      Serial.print("json error: ");
       Serial.println(err.c_str());
     }
   } else {
-    Serial.print("[CLIMA] HTTP error: ");
+    Serial.print("http error: ");
     Serial.println(httpCode);
     display.clearDisplay();
     display.setCursor(20, 28);
@@ -135,37 +128,36 @@ void fetchWeather() {
 void showWeather() {
   display.clearDisplay();
 
-  // ── City name ──
+  // city
   display.setTextSize(1);
   display.setCursor(0, 0);
   display.print(city);
 
-  // ── Temperature (large) ──
+  // temperature
   display.setTextSize(2);
   display.setCursor(0, 14);
   display.print(cachedTemp, 1);
   display.setTextSize(1);
   display.print(" C");
 
-  // ── Humidity ──
+  // humidity
   display.setTextSize(1);
   display.setCursor(0, 36);
   display.print("Hum: ");
   display.print(cachedHumidity);
   display.print("%");
 
-  // ── Description ──
+  // description
   display.setCursor(0, 48);
   String desc = cachedDesc;
   if (desc.length() > 21) desc = desc.substring(0, 21);
   display.print(desc);
 
-  // ── Thermometer bar (right side) ──
+  // thermometer bar on the right side
   int barX = 110;
   int barTop = 2;
   int barH = 56;
   display.drawRect(barX, barTop, 14, barH, SSD1306_WHITE);
-  // Map temp range -10..50 → bar fill
   int fillH = constrain(map((int)(cachedTemp * 10), -100, 500, 0, barH - 4), 0, barH - 4);
   display.fillRect(barX + 2, barTop + (barH - 4) - fillH + 2, 10, fillH, SSD1306_WHITE);
 

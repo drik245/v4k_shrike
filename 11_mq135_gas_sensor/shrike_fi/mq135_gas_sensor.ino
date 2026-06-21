@@ -1,30 +1,27 @@
 /*
- * MQ-135 Gas Sensor – Shrike Fi (ESP32-S3)
- * ========================================
- * Board target : ESP32-S3 Dev Module (Generic)
- *
- * Reads the analog output from an MQ-135 Air Quality Sensor with
- * multi-sample averaging for stable readings. Includes an onboard
- * LED warning indicator and buzzer-ready output pin.
- *
- * Wiring (Shrike Fi header):
- *   MQ-135 AO  → ESP_IO1  (GPIO 1, ADC1_CH0)
- *   Warning LED → ESP_IO21 (GPIO 21, Onboard LED)
- *   Buzzer (opt) → ESP_IO3  (GPIO 3)
- *
- * No external libraries required.
- */
+  MQ-135 Gas Sensor - Shrike Fi (ESP32-S3)
 
-// ── Hardware Pins (Shrike Fi) ──
-#define MQ135_PIN   1   // ESP_IO1 – ADC1_CH0
-#define LED_PIN     21  // ESP_IO21 – onboard LED
-#define BUZZER_PIN  3   // ESP_IO3 – optional buzzer
+  Reads analog output from MQ-135 with 16-sample averaging
+  for stable readings. LED warns on poor air, buzzer on danger.
 
-// ── ADC Averaging ──
+  Wiring:
+    MQ-135 AO   - ESP_IO1 (GPIO 1, ADC1_CH0)
+    Warning LED - ESP_IO21 (GPIO 21)
+    Buzzer      - ESP_IO3 (GPIO 3, optional)
+
+  No external libraries needed.
+*/
+
+// pins
+#define MQ135_PIN   1
+#define LED_PIN     21
+#define BUZZER_PIN  3
+
+// averaging
 #define NUM_SAMPLES   16
-#define SAMPLE_DELAY  10  // ms between each sample
+#define SAMPLE_DELAY  10
 
-// ── Thresholds (tune after calibration in clean air) ──
+// thresholds (tune after calibration in clean air)
 #define GOOD_LIMIT    1000
 #define WARN_LIMIT    2000
 
@@ -42,16 +39,16 @@ int readAveraged() {
 void setup() {
   Serial.begin(115200);
 
-  analogSetPinAttenuation(MQ135_PIN, ADC_11db); // 0–3.3V range
+  analogSetPinAttenuation(MQ135_PIN, ADC_11db);
 
   pinMode(LED_PIN,    OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(LED_PIN,    LOW);
   digitalWrite(BUZZER_PIN, LOW);
 
-  Serial.println("[MQ135] Starting Air Quality Sensor...");
-  Serial.println("[MQ135] Warming up (20s recommended for accuracy)...");
-  delay(2000); // short startup delay — real warm-up is ~20 min
+  Serial.println("starting MQ-135 sensor...");
+  Serial.println("warming up (20s recommended for accuracy)...");
+  delay(2000);
 }
 
 void loop() {
@@ -62,24 +59,24 @@ void loop() {
 
   if (raw < GOOD_LIMIT) {
     quality   = AIR_GOOD;
-    statusStr = "GOOD";
+    statusStr = "good";
     digitalWrite(LED_PIN,    LOW);
     digitalWrite(BUZZER_PIN, LOW);
   } else if (raw < WARN_LIMIT) {
     quality   = AIR_POOR;
-    statusStr = "POOR (Warning)";
-    digitalWrite(LED_PIN, HIGH); // LED on as warning
+    statusStr = "poor (warning)";
+    digitalWrite(LED_PIN, HIGH);
     digitalWrite(BUZZER_PIN, LOW);
   } else {
     quality   = AIR_DANGER;
-    statusStr = "DANGER!";
+    statusStr = "DANGER";
     digitalWrite(LED_PIN,    HIGH);
-    digitalWrite(BUZZER_PIN, HIGH); // optional buzzer on
+    digitalWrite(BUZZER_PIN, HIGH);
   }
 
-  Serial.print("[MQ135] Avg: ");
+  Serial.print("avg: ");
   Serial.print(raw);
-  Serial.print("  Status: ");
+  Serial.print("  status: ");
   Serial.println(statusStr);
 
   delay(2000);
