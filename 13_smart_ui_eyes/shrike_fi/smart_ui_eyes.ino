@@ -13,7 +13,7 @@
   OLED SPI wiring:
     MOSI-35, CLK-36, DC-37, RST-38, CS-34
 
-  Needs: Adafruit SSD1306, Adafruit GFX, ArduinoJson
+  Needs: FluxGarage RoboEyes, Adafruit SSD1306, Adafruit GFX, ArduinoJson
 */
 
 #include <WiFi.h>
@@ -23,16 +23,17 @@
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <FluxGarage_RoboEyes.h>
 
 const char* ssid     = "YOUR_WIFI_NAME";
 const char* password = "YOUR_WIFI_PASSWORD";
 
 String apiKey      = "YOUR_OPENWEATHERMAP_API_KEY";
-String city        = "New York";
-String countryCode = "US";
+String city        = "Delhi";
+String countryCode = "IN";
 
 const char* ntpServer     = "pool.ntp.org";
-const long  gmtOffset_sec = 19800;
+const long  gmtOffset_sec = 19800; // IST +5:30
 const int   dstOffset_sec = 0;
 
 #define SCREEN_WIDTH  128
@@ -45,13 +46,14 @@ const int   dstOffset_sec = 0;
 #define OLED_RST  38
 #define OLED_CS   34
 
-// touch pins
+// touch pins (digital touch sensors like TTP223)
 #define TOUCH_NEXT   1
 #define TOUCH_SELECT 2
-#define TOUCH_THRESHOLD 30000
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
                          OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
+
+RoboEyes<Adafruit_SSD1306> roboEyes(display);
 
 // state machine
 enum State { ST_WELCOME, ST_EYES, ST_MENU, ST_TIME, ST_WEATHER };
@@ -61,14 +63,6 @@ State currentState = ST_WELCOME;
 bool lastNext = false, lastSelect = false;
 unsigned long lastNextDebounce = 0, lastSelectDebounce = 0;
 const unsigned long TOUCH_DEBOUNCE = 200;
-
-// eyes animation
-unsigned long lastEyeAction = 0;
-unsigned long eyeActionInterval = 2000;
-int eyeXoff = 0, eyeYoff = 0, eyeBlink = 0;
-bool eyesBlinking = false;
-int blinkPhase = 0;
-unsigned long lastBlinkStep = 0;
 
 // menu
 int menuIndex = 0;
@@ -84,13 +78,12 @@ unsigned long lastWeatherFetch = 0;
 // welcome timer
 unsigned long welcomeStart = 0;
 
-
-// touch helpers
+// touch helpers (assumes active HIGH like TTP223)
 bool readNext() {
-  return touchRead(TOUCH_NEXT) < TOUCH_THRESHOLD;
+  return digitalRead(TOUCH_NEXT) == HIGH;
 }
 bool readSelect() {
-  return touchRead(TOUCH_SELECT) < TOUCH_THRESHOLD;
+  return digitalRead(TOUCH_SELECT) == HIGH;
 }
 bool nextPressed() {
   bool cur = readNext();
@@ -112,7 +105,6 @@ bool selectPressed() {
   lastSelect = cur;
   return false;
 }
-
 
 void fetchWeather() {
   HTTPClient http;
@@ -136,7 +128,6 @@ void fetchWeather() {
   lastWeatherFetch = millis();
 }
 
-
 void drawWelcome() {
   display.clearDisplay();
   display.setTextSize(2);
@@ -147,36 +138,6 @@ void drawWelcome() {
   display.print("Smart UI Eyes");
   display.setCursor(20, 48);
   display.print("Connecting...");
-  display.display();
-}
-
-void drawEyes(int xOff, int yOff, int blink) {
-  display.clearDisplay();
-
-  int lx = 20 + xOff;
-  int rx = 78 + xOff;
-  int ey = 8 + yOff + blink;
-  int eh = max(2, 44 - blink * 2);
-
-  // eyes
-  display.fillRoundRect(lx, ey, 30, eh, 10, SSD1306_WHITE);
-  display.fillRoundRect(rx, ey, 30, eh, 10, SSD1306_WHITE);
-
-  // pupils (only when not blinking)
-  if (eh > 10) {
-    int px = 8 + constrain(xOff, -5, 5);
-    int py = (eh / 2) - 4 + constrain(yOff, -3, 3);
-    display.fillCircle(lx + px + 7, ey + py + 4, 4, SSD1306_BLACK);
-    display.fillCircle(rx + px + 7, ey + py + 4, 4, SSD1306_BLACK);
-  }
-
-  // bottom bar
-  display.setTextSize(1);
-  display.setCursor(0, 56);
-  display.print("[NEXT]");
-  display.setCursor(86, 56);
-  display.print("[MENU]");
-
   display.display();
 }
 
@@ -270,57 +231,12 @@ void drawWeather() {
   display.display();
 }
 
-
-// eyes animation logic
-void updateEyes() {
-  if (eyesBlinking) {
-    if (millis() - lastBlinkStep > 25) {
-      lastBlinkStep = millis();
-      if (blinkPhase < 22) {
-        blinkPhase += 5;
-      } else {
-        blinkPhase -= 5;
-        if (blinkPhase <= 0) {
-          blinkPhase = 0;
-          eyesBlinking = false;
-        }
-      }
-      eyeBlink = blinkPhase;
-    }
-    drawEyes(eyeXoff, eyeYoff, eyeBlink);
-    return;
-  }
-
-  if (millis() - lastEyeAction > eyeActionInterval) {
-    lastEyeAction = millis();
-    eyeActionInterval = random(1500, 4000);
-
-    int action = random(0, 10);
-    if (action < 3) {
-      eyesBlinking = true;
-      blinkPhase = 0;
-      lastBlinkStep = millis();
-    } else if (action < 5) {
-      eyeXoff = -8;
-      eyeYoff = 0;
-    } else if (action < 7) {
-      eyeXoff = 8;
-      eyeYoff = 0;
-    } else if (action < 8) {
-      eyeXoff = 0;
-      eyeYoff = -4;
-    } else {
-      eyeXoff = 0;
-      eyeYoff = 0;
-    }
-  }
-
-  drawEyes(eyeXoff, eyeYoff, 0);
-}
-
-
 void setup() {
   Serial.begin(115200);
+
+  // setup touch pins
+  pinMode(TOUCH_NEXT,   INPUT);
+  pinMode(TOUCH_SELECT, INPUT);
 
   if (!display.begin(SSD1306_SWITCHCAPVCC)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -347,6 +263,12 @@ void setup() {
   fetchWeather();
 
   delay(max(0L, 3000L - (long)(millis() - welcomeStart)));
+  
+  // init roboeyes
+  roboEyes.begin(SCREEN_WIDTH, SCREEN_HEIGHT, 60);
+  roboEyes.setAutoblinker(ON, 3, 2);
+  roboEyes.setIdleMode(ON, 2, 2);
+  
   currentState = ST_EYES;
 }
 
@@ -354,9 +276,9 @@ void loop() {
   switch (currentState) {
 
     case ST_EYES:
-      updateEyes();
+      roboEyes.update();
       if (nextPressed()) {
-        eyesBlinking = true; blinkPhase = 0; lastBlinkStep = millis();
+        roboEyes.anim_confused();
       }
       if (selectPressed()) {
         menuIndex = 0;
@@ -390,7 +312,7 @@ void loop() {
       if (selectPressed()) {
         currentState = ST_EYES;
       }
-      delay(1000);
+      delay(50); // fast loop
       break;
 
     case ST_WEATHER:
@@ -401,6 +323,7 @@ void loop() {
       if (selectPressed()) {
         currentState = ST_EYES;
       }
+      delay(50);
       break;
 
     default:
