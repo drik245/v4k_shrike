@@ -22,3 +22,4 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 14 | [NTP TM1637 Clock](14_ntp_tm1637_clock/) | Shrike Fi, TM1637 Display | NTP-synced HH:MM clock on a 4-digit seven-segment display |
 | 15 | [Button Press Counter](15_button_counter/) | Shrike Lite / Shrike Fi, TM1637 Display, Button | Button counter on TM1637 — short press to count, hold to reset |
 | 16 | [Alarm Clock](16_alarm_clock/) | Shrike Fi, TM1637 Display, Buttons, Buzzer | Offline alarm clock — manual time set, blinking digits, buzzer alert |
+| 17 | [Mini Weather Station](17_mini_weather_station/) | Shrike Fi, 16x2 LCD, DHT22 Sensor | Localized weather station displaying data on a 4-bit parallel LCD |
