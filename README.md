@@ -23,3 +23,6 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 15 | [Button Press Counter](15_button_counter/) | Shrike Lite / Shrike Fi, TM1637 Display, Button | Button counter on TM1637 — short press to count, hold to reset |
 | 16 | [Alarm Clock](16_alarm_clock/) | Shrike Fi, TM1637 Display, Buttons, Buzzer | Offline alarm clock — manual time set, blinking digits, buzzer alert |
 | 17 | [Mini Weather Station](17_mini_weather_station/) | Shrike Fi, 16x2 LCD, DHT22 Sensor | Localized weather station displaying data on a 4-bit parallel LCD |
+| 18 | [Smart IR Object Detection](18_ir_object_detection/) | Shrike Lite / Shrike Fi, IR Sensor, LED, Buzzer | Simple object detection system with visual and auditory feedback |
+| 19 | [Wi-Fi 4WD Robot](19_wifi_4wd_robot/) | Shrike Fi, L298N, Servo, HC-SR04 | A massive 16-pin project: Wi-Fi controlled car with speed control and obstacle avoidance |
+| 20 | [Finger Gesture LEDs](20_finger_gesture_leds/) | Shrike Lite / Shrike Fi, OpenCV, MediaPipe | (MicroPython) Detects hand gestures via PC webcam and toggles LEDs |
