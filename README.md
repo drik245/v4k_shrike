@@ -26,3 +26,4 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 18 | [Smart IR Object Detection](18_ir_object_detection/) | Shrike Lite / Shrike Fi, IR Sensor, LED, Buzzer | Simple object detection system with visual and auditory feedback |
 | 19 | [Wi-Fi 4WD Robot](19_wifi_4wd_robot/) | Shrike Fi, L298N, Servo, HC-SR04 | A massive 16-pin project: Wi-Fi controlled car with speed control and obstacle avoidance |
 | 20 | [Finger Gesture LEDs](20_finger_gesture_leds/) | Shrike Lite / Shrike Fi, OpenCV, MediaPipe | (MicroPython) Detects hand gestures via PC webcam and toggles LEDs |
+| 21 | [Auto Night Light](21_Auto_Night_Light/) | Shrike Lite / Shrike Fi, LDR, LED | Uses LDR to detect brightness and triggers a smooth LED breathing effect using 12-bit PWM |
