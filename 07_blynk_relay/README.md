@@ -32,8 +32,8 @@ Set up a Device in your Blynk Web Dashboard/App with the following Datastreams:
 ## 🚀 Setup Instructions
 
 1. Install the following libraries in Arduino IDE:
-   - `Blynk` by Volodymyr Shymanskyy
-   - `DHTesp` (Optimized DHT library for ESP32)
+   - `Blynk` by Blynk
+   - `DHTesp` (Optimized DHT library for ESPs) by beegee_tokyo
 2. Open `shrike_fi/blynk_relay.ino`.
 3. Enter your Wi-Fi credentials (`ssid` and `pass`).
 4. Enter your Blynk `BLYNK_TEMPLATE_ID`, `BLYNK_DEVICE_NAME`, and `BLYNK_AUTH_TOKEN` at the top of the file.
