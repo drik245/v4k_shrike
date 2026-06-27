@@ -22,7 +22,7 @@ Connect your LDR and LED components to your board:
 ### Shrike Lite Wiring
 | Component | Pin |
 |-----------|-----|
-| LDR (Analog) | A0 (RP_IO26) |
+| LDR (Analog) | RP_IO26 |
 | LED (PWM) | RP_IO15 |
 
 ## Code Analysis & Features
