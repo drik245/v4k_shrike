@@ -6,7 +6,6 @@ A cloud-connected smart thermostat built using the **Shrike Fi** (ESP32-S3), a D
 
 - **Automated Edge-Triggered Thermostat:** Constantly monitors the room temperature. When the temperature crosses your predefined `TEMP_THRESHOLD` (e.g., 30°C), it automatically triggers the relay (perfect for fans or AC units). 
 - **Smart Manual Override:** Because the thermostat is "edge-triggered", it won't fight you! If it's hot and the relay turns ON automatically, you can still press a button to manually turn it OFF, and the system will respect your choice until the temperature crosses the threshold again.
-- **Active-Low Support:** Built-in software switch (`#define ACTIVE_LOW_RELAY true`) makes it effortlessly compatible with cheap active-low relay modules without requiring messy hardware inverters.
 - **Blynk Cloud Integration:** Sends live temperature and humidity data to your phone, and accepts remote relay commands from anywhere in the world.
 
 ## 🔌 Hardware Setup
