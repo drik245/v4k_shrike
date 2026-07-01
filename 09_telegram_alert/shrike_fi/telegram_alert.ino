@@ -32,7 +32,7 @@ UniversalTelegramBot bot(BOTtoken, client);
 
 volatile bool motionDetected = false;
 unsigned long lastAlertTime = 0;
-const unsigned long COOLDOWN_MS = 10000; // 10s between alerts
+const unsigned long COOLDOWN_MS = 5000; // 10s between alerts
 
 unsigned long lastBotCheck = 0;
 const unsigned long BOT_CHECK_MS = 5000; // check messages every 5s
@@ -80,7 +80,7 @@ void setup() {
 
   Serial.print("connecting to wifi...");
   WiFi.begin(ssid, password);
-  client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
+  client.setInsecure();
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -103,8 +103,14 @@ void loop() {
 
       Serial.println("motion detected, sending alert");
       flashLED(2, 80);
-      bot.sendMessage(CHAT_ID,
+
+      bool sent = bot.sendMessage(CHAT_ID,
         "ALERT: Motion detected! (#" + String(motionCount) + ")", "");
+      if (sent) {
+        Serial.println("  -> telegram sent OK");
+      } else {
+        Serial.println("  -> ERROR: telegram send failed!");
+      }
     } else {
       Serial.println("motion ignored (cooldown)");
     }
@@ -120,3 +126,4 @@ void loop() {
     }
   }
 }
+
