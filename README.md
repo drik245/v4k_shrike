@@ -27,3 +27,10 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 19 | [Wi-Fi 4WD Robot](19_wifi_4wd_robot/) | Shrike Fi, L298N, Servo, HC-SR04 | A massive 16-pin project: Wi-Fi controlled car with speed control and obstacle avoidance |
 | 20 | [Finger Gesture LEDs](20_finger_gesture_leds/) | Shrike Lite / Shrike Fi, OpenCV, MediaPipe | (MicroPython) Detects hand gestures via PC webcam and toggles LEDs |
 | 21 | [Auto Night Light](21_Auto_Night_Light/) | Shrike Lite / Shrike Fi, LDR, LED | Uses LDR to detect brightness and triggers a smooth LED breathing effect using 12-bit PWM |
+| 22 | [BLE LED Control](22_ble_led_control/) | Shrike Fi | (MicroPython) Control an LED via Bluetooth Low Energy using nRF Connect app |
+| 23 | [OTA GitHub Update](23_ota_github_update/) | Shrike Fi | (MicroPython) Over-the-air code updates from GitHub on every boot |
+| 24 | [RFID Access Control](24_rfid_access_control/) | Shrike Lite / Shrike Fi, MFRC522 | (MicroPython) Scans RFID cards and grants/denies access based on authorized UID list |
+| 25 | [RFID Attendance Logger](25_rfid_attendance_logger/) | Shrike Fi, MFRC522 | (MicroPython) Logs RFID attendance to Google Sheets via Wi-Fi webhook |
+| 26 | [ESP-NOW RFID Display](26_espnow_rfid_display/) | Shrike Fi + ESP32 WROOM, MFRC522, OLED | (MicroPython) Wirelessly sends scanned RFID UIDs to a second board's OLED via ESP-NOW |
+| 27 | [ESP-NOW Home Automation](27_espnow_home_automation/) | Shrike Fi + ESP32 WROOM, 4-Ch Relay, DHT22, OLED | (MicroPython) Bidirectional ESP-NOW: 4 buttons control remote relays, sensor data sent back to OLED |
+| 28 | [PIR Parking System](28_pir_parking_system/) | Shrike Lite / Shrike Fi, 2x PIR, OLED | (MicroPython) Monitors 2 parking slots with PIR sensors and shows live status on OLED |
