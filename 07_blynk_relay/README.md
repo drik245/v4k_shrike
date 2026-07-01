@@ -6,7 +6,6 @@ A cloud-connected smart thermostat built using the **Shrike Fi** (ESP32-S3), a D
 
 - **Automated Edge-Triggered Thermostat:** Constantly monitors the room temperature. When the temperature crosses your predefined `TEMP_THRESHOLD` (e.g., 30°C), it automatically triggers the relay (perfect for fans or AC units). 
 - **Smart Manual Override:** Because the thermostat is "edge-triggered", it won't fight you! If it's hot and the relay turns ON automatically, you can still press a button to manually turn it OFF, and the system will respect your choice until the temperature crosses the threshold again.
-- **Active-Low Support:** Built-in software switch (`#define ACTIVE_LOW_RELAY true`) makes it effortlessly compatible with cheap active-low relay modules without requiring messy hardware inverters.
 - **Blynk Cloud Integration:** Sends live temperature and humidity data to your phone, and accepts remote relay commands from anywhere in the world.
 
 ## 🔌 Hardware Setup
@@ -33,8 +32,8 @@ Set up a Device in your Blynk Web Dashboard/App with the following Datastreams:
 ## 🚀 Setup Instructions
 
 1. Install the following libraries in Arduino IDE:
-   - `Blynk` by Volodymyr Shymanskyy
-   - `DHTesp` (Optimized DHT library for ESP32)
+   - `Blynk` by Blynk
+   - `DHTesp` (Optimized DHT library for ESPs) by beegee_tokyo
 2. Open `shrike_fi/blynk_relay.ino`.
 3. Enter your Wi-Fi credentials (`ssid` and `pass`).
 4. Enter your Blynk `BLYNK_TEMPLATE_ID`, `BLYNK_DEVICE_NAME`, and `BLYNK_AUTH_TOKEN` at the top of the file.
