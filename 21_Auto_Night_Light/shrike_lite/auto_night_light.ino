@@ -1,11 +1,17 @@
 #define ldr_pin 26
 #define led 15
+
 const long readInterval = 800;
 unsigned long lastRead = 0;
 const int threshold = 230;
+
 int rawValue = 0; 
 int brightness = 0;
 unsigned long lastStep = 0;
+
+const unsigned long timeout = 10000;   // 10s in milliseconds
+unsigned long darkSince = 0;
+bool wasDark = false;
 
 // Breath state machine
 enum BreathState { GLOWING, HOLDING, DIMMING };
@@ -40,7 +46,7 @@ void breath(int breathInterval) {       //breathing function
       }
       break;
     case HOLDING:                       //holding state
-      if (millis() - holdStart >= breathInterval) {
+      if (micros() - holdStart >= breathInterval) {
         breathState = DIMMING;
       }
       break;
@@ -69,9 +75,21 @@ void loop() {
     Serial.println(rawValue);
   }
 
-  if (rawValue >= threshold) {
-    glow(100);                  // in micro-seconds
-  } else {                    
-    breath(100);                // in milli-seconds
+  bool isDark = (rawValue > threshold);
+
+  if (!isDark) {
+    wasDark = false;                     // Lights ON, reset dark-timer
+    darkSince = 0;
+    dim(500);                            // off in lit enviornment
+  } else {
+    if (!wasDark) {
+      wasDark = true;
+      darkSince = currentMillis;          // mark when it just went dark
+    }
+    if (currentMillis - darkSince < timeout) {
+      glow(500);                   
+    } else {
+      breath(20000);                       //normal breathing after solid-on in the dark 
+    }
   }
 }

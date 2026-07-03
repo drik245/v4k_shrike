@@ -1,6 +1,6 @@
 # 🌙 Auto Night Light
 
-An intelligent night light system that uses an LDR (Light Dependent Resistor) to monitor ambient brightness. When the room is lit, the LED breathes gracefully. When the room is dark, the LED glows steadily.
+An intelligent night light system that uses an LDR (Light Dependent Resistor) to monitor ambient brightness. It features a smart timer: when the room is lit, the LED turns off. When the room goes dark, the LED glows steadily for a configurable duration, after which it transitions into a calming, slow breathing animation to save power and reduce glare.
 
 ## Board Variants
 
@@ -42,6 +42,7 @@ This project utilizes advanced, non-blocking techniques to create a smooth, resp
 - **High-Resolution PWM Output:** The code utilizes a 12-bit resolution (`4095` maximum value) for controlling the LED. This ensures incredibly smooth brightness transitions compared to standard 8-bit (255) fading.
   - On the **Shrike Fi**, this is handled via ESP32's `ledcAttach()` and `ledcWrite()` functions.
   - On the **Shrike Lite**, this is handled natively via the RP2040's `analogWriteResolution(12)`.
+- **Smart Timer Logic:** A timeout mechanism (`darkSince`) detects exactly when the room goes dark. It provides solid illumination for a set time (e.g., 10 seconds) before gracefully degrading into a slow breathing mode.
 - **Consistent Analog Reads:** By using `analogReadResolution(8)`, both the ESP32-S3 and RP2040 output LDR values in the 0-255 range, making the threshold logic easier to decide.
 
 ## 🛠️ Adjusting the Threshold
