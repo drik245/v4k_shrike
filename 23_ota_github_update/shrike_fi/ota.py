@@ -7,20 +7,22 @@ import machine
 import time
 import os
 
-# ===== CONFIGURE THESE =====
+# config. these
 WIFI_SSID     = "YOUR_WIFI_SSID"
 WIFI_PASS     = "YOUR_WIFI_PASSWORD"
-GITHUB_USER   = "YOUR_GITHUB_USERNAME"
-GITHUB_REPO   = "YOUR_REPO_NAME"
+GITHUB_USER   = "your-username"
+GITHUB_REPO   = "your-repo-name"
 GITHUB_BRANCH = "main"
-# ============================
+REMOTE_PATH   = "path/to/project/folder" # e.g. "23_ota_github_update/shrike_fi. (if any, otherwise leave empty - "")"
 
-BASE_URL = "https://raw.githubusercontent.com/{}/{}/{}/".format(
-    GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH
+BASE_URL = "https://raw.githubusercontent.com/{}/{}/{}/{}".format(
+    GITHUB_USER, GITHUB_REPO, GITHUB_BRANCH, REMOTE_PATH
 )
 
-VERSION_FILE_REMOTE = BASE_URL + "version.txt"
-MAIN_FILE_REMOTE    = BASE_URL + "main.py"
+print(BASE_URL)
+
+VERSION_FILE_REMOTE = BASE_URL + "/version.txt"
+MAIN_FILE_REMOTE    = BASE_URL + "/main.py"
 LOCAL_VERSION_FILE  = "local_version.txt"
 
 
