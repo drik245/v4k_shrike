@@ -21,13 +21,14 @@ RED_LED   = Pin(2, Pin.OUT)
 GREEN_LED.value(0)
 RED_LED.value(0)
 
-# RFID reader setup (SoftSPI)
-rfid = MFRC522(sck=5, mosi=6, miso=7, rst=3, cs=4)
+# RFID reader setup (Hardware SPI 1)
+rfid = MFRC522(sck=5, mosi=6, miso=7, rst=3, cs=4, spi_id=1)
 
 # Authorized UIDs (add your card UIDs here after scanning them)
 AUTHORIZED = [
     "AA:BB:CC:DD",
     "11:22:33:44",
+    "0B:0F:2D:07",
 ]
 
 print("=== RFID Access Control - Shrike Fi ===")

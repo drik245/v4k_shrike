@@ -21,8 +21,8 @@ RED_LED   = Pin(14, Pin.OUT)
 GREEN_LED.value(0)
 RED_LED.value(0)
 
-# RFID reader setup (SoftSPI)
-rfid = MFRC522(sck=18, mosi=19, miso=16, rst=20, cs=17)
+# RFID reader setup (Hardware SPI 0)
+rfid = MFRC522(sck=18, mosi=19, miso=16, rst=20, cs=17, spi_id=0)
 
 # Authorized UIDs (add your card UIDs here after scanning them)
 AUTHORIZED = [

@@ -21,10 +21,10 @@ class MFRC522:
         self.cs.value(1)
 
         if spi_id >= 0:
-            self.spi = SPI(spi_id, baudrate=2500000, polarity=0, phase=0,
+            self.spi = SPI(spi_id, baudrate=1000000, polarity=0, phase=0,
                            sck=Pin(sck), mosi=Pin(mosi), miso=Pin(miso))
         else:
-            self.spi = SoftSPI(baudrate=2500000, polarity=0, phase=0,
+            self.spi = SoftSPI(baudrate=1000000, polarity=0, phase=0,
                                sck=Pin(sck), mosi=Pin(mosi), miso=Pin(miso))
 
         self.init()
