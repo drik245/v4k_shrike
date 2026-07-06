@@ -6,13 +6,16 @@
 #   Button 2 -> ESP_IO2 (pullup, active low)
 #   Button 3 -> ESP_IO3 (pullup, active low)
 #   Button 4 -> ESP_IO4 (pullup, active low)
-#   OLED SDA -> ESP_IO6
-#   OLED SCL -> ESP_IO5
+#   OLED SCK  -> ESP_IO5
+#   OLED MOSI -> ESP_IO6
+#   OLED CS   -> ESP_IO7
+#   OLED DC   -> ESP_IO8
+#   OLED RES  -> ESP_IO9
 
 import network
 import espnow
 import time
-from machine import Pin, I2C, SoftI2C
+from machine import Pin, SPI
 import ssd1306
 
 # ===== CONFIGURE THIS =====
@@ -40,9 +43,12 @@ buttons = [
 # Relay state tracking
 relay_states = [0, 0, 0, 0]
 
-# Setup OLED
-i2c = SoftI2C(scl=Pin(5), sda=Pin(6), freq=400000)
-oled = ssd1306.SSD1306_I2C(128, 64, i2c)
+# Setup OLED (SPI)
+spi = SPI(1, baudrate=10000000, sck=Pin(5), mosi=Pin(6))
+oled_cs = Pin(7, Pin.OUT)
+oled_dc = Pin(8, Pin.OUT)
+oled_res = Pin(9, Pin.OUT)
+oled = ssd1306.SSD1306_SPI(128, 64, spi, oled_dc, oled_res, oled_cs)
 
 # Display vars
 temp = "--"
