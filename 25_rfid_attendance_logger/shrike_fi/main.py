@@ -18,16 +18,16 @@ import ujson
 from machine import Pin, RTC
 from mfrc522 import MFRC522
 
-# ===== CONFIGURE THESE =====
+# config this
 WIFI_SSID   = "YOUR_WIFI_SSID"
 WIFI_PASS   = "YOUR_WIFI_PASSWORD"
 WEBHOOK_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"
-# ============================
 
 # Student database: UID -> Name
 STUDENTS = {
     "AA:BB:CC:DD": "Student A",
     "11:22:33:44": "Student B",
+    "0B:0F:2D:07": "Student C",
 }
 
 # Track IN/OUT status per student
@@ -81,18 +81,22 @@ def get_timestamp():
 def log_to_sheets(name, status):
     timestamp = get_timestamp()
     data = {
-        "timestamp": timestamp,
-        "student": name,
-        "status": status,
+        "field1": name,
+        "field2": status,
     }
     print("Logging:", data)
+    
     try:
         response = urequests.post(
             WEBHOOK_URL,
             json=data,
             headers={"Content-Type": "application/json"}
         )
-        print("Response:", response.status_code)
+        status_code = response.status_code
+        if status_code in (200, 302, 400): 
+            print("Response: Logged Successfully (Status {})".format(status_code))
+        else:
+            print("Response:", status_code)
         response.close()
         return True
     except Exception as e:

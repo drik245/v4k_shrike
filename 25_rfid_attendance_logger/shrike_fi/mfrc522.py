@@ -14,7 +14,7 @@ class MFRC522:
     AUTHENT1A = 0x60
     AUTHENT1B = 0x61
 
-    def __init__(self, sck, mosi, miso, rst, cs, spi_id=-1):
+    def __init__(self, sck, mosi, miso, rst, cs, spi_id=1):
         self.rst = Pin(rst, Pin.OUT)
         self.cs  = Pin(cs, Pin.OUT)
         self.rst.value(1)
