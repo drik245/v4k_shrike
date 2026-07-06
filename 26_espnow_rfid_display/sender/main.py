@@ -15,7 +15,7 @@ from mfrc522 import MFRC522
 
 # ===== CONFIGURE THIS =====
 # Run get_mac.py on the RECEIVER board first, then paste its MAC here
-RECEIVER_MAC = b'\xFF\xFF\xFF\xFF\xFF\xFF'  # REPLACE with actual receiver MAC
+RECEIVER_MAC = b'\x00\x4B\x12\x3B\x25\x48'  # REPLACE with actual receiver MAC
 # ============================
 
 # Setup Wi-Fi in station mode (required for ESP-NOW)
