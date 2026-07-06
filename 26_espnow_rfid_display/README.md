@@ -50,3 +50,15 @@ It uses two boards:
 2. Run `main.py` on the Shrike Fi.
 3. Scan an RFID card on the Shrike Fi's reader.
 4. The Shrike Fi will print `Sent to receiver: UID:...` and the ESP32 WROOM's OLED display will instantly update with the scanned UID and increment the scan count!
+
+---
+## 💡 MicroPython Tip: Auto-run on Boot
+By default, MicroPython boards automatically search for and execute a file named **`main.py`** on boot. If your code is inside a file with a different name (e.g., `app.py`), it will **not** run automatically when you power on the board.
+
+To make it run on boot, you have two options:
+1. Rename your script to `main.py`.
+2. Create a `main.py` file that simply imports your script:
+   ```python
+   # Inside main.py
+   import app
+   ```

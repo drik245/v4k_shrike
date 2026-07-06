@@ -52,3 +52,15 @@ When you want to update the code on your board wirelessly:
 1. Edit `main.py` in your GitHub repository and commit the changes.
 2. Edit `version.txt` (e.g. change `1.0.0` to `1.0.1`) and commit the change.
 3. The next time the Shrike Fi reboots (or whenever you call `ota.check_for_update()`), it will detect the new version, download the new `main.py`, and restart automatically with the new code!
+
+---
+## 💡 MicroPython Tip: Auto-run on Boot
+By default, MicroPython boards automatically search for and execute a file named **`main.py`** on boot. If your code is inside a file with a different name (e.g., `app.py`), it will **not** run automatically when you power on the board.
+
+To make it run on boot, you have two options:
+1. Rename your script to `main.py`.
+2. Create a `main.py` file that simply imports your script:
+   ```python
+   # Inside main.py
+   import app
+   ```

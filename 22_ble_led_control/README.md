@@ -36,3 +36,15 @@ Send the following exact strings:
 ## How it Works
 
 The code uses the `bluetooth` module in MicroPython to create a GATT Server. It registers the Nordic UART Service UUIDs. When a central device (your phone) connects and writes data to the TX characteristic, an interrupt (`_IRQ_GATTS_WRITE`) is triggered. The code reads the byte buffer, decodes it into a string, and toggles the GPIO pin accordingly.
+
+---
+## 💡 MicroPython Tip: Auto-run on Boot
+By default, MicroPython boards automatically search for and execute a file named **`main.py`** on boot. If your code is inside a file with a different name (e.g., `app.py`), it will **not** run automatically when you power on the board.
+
+To make it run on boot, you have two options:
+1. Rename your script to `main.py`.
+2. Create a `main.py` file that simply imports your script:
+   ```python
+   # Inside main.py
+   import app
+   ```

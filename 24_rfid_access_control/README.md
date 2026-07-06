@@ -47,3 +47,15 @@ The MFRC522 communicates over SPI. To ensure maximum stability, we use Hardware 
    - Re-upload `main.py` to your board.
 4. **Test Access:**
    - Scan the card again. The system will recognize it, print `ACCESS GRANTED`, and flash the Green LED!
+
+---
+## 💡 MicroPython Tip: Auto-run on Boot
+By default, MicroPython boards automatically search for and execute a file named **`main.py`** on boot. If your code is inside a file with a different name (e.g., `app.py`), it will **not** run automatically when you power on the board.
+
+To make it run on boot, you have two options:
+1. Rename your script to `main.py`.
+2. Create a `main.py` file that simply imports your script:
+   ```python
+   # Inside main.py
+   import app
+   ```

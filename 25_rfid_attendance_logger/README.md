@@ -65,3 +65,15 @@ Once booted, the board will connect to Wi-Fi and print `Ready! Scan a card...` i
 - **Scan a known card:** It will log the student as `IN`, flash the green LED, and send the data to Google Sheets.
 - **Scan the same card again:** It remembers the previous state and will automatically log the student as `OUT`!
 - **Scan an unknown card:** It will flash the red LED and print `Unknown card`.
+
+---
+## 💡 MicroPython Tip: Auto-run on Boot
+By default, MicroPython boards automatically search for and execute a file named **`main.py`** on boot. If your code is inside a file with a different name (e.g., `app.py`), it will **not** run automatically when you power on the board.
+
+To make it run on boot, you have two options:
+1. Rename your script to `main.py`.
+2. Create a `main.py` file that simply imports your script:
+   ```python
+   # Inside main.py
+   import app
+   ```

@@ -55,3 +55,15 @@ pip install numpy==1.26.4 opencv-python mediapipe==0.10.14 cvzone pyserial
 python pc_script/finger_led.py
 ```
 5. Hold your hand up to the webcam. As you raise fingers, the LEDs on your breadboard will light up in real time!
+
+---
+## 💡 MicroPython Tip: Auto-run on Boot
+By default, MicroPython boards automatically search for and execute a file named **`main.py`** on boot. If your code is inside a file with a different name (e.g., `app.py`), it will **not** run automatically when you power on the board.
+
+To make it run on boot, you have two options:
+1. Rename your script to `main.py`.
+2. Create a `main.py` file that simply imports your script:
+   ```python
+   # Inside main.py
+   import app
+   ```
