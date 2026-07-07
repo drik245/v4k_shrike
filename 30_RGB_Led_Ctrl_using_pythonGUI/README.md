@@ -56,3 +56,15 @@ python shrike_led_gui.py
 2. Click **Connect**.
 3. Use the sliders, color picker, or effect buttons to control the LED! 
 4. The status text at the bottom will show you exactly what the board is doing or report any errors.
+
+---
+## 💡 MicroPython Tip: Auto-run on Boot
+By default, MicroPython boards automatically search for and execute a file named **`main.py`** on boot. If your code is inside a file with a different name (e.g., `app.py`), it will **not** run automatically when you power on the board.
+
+To make it run on boot, you have two options:
+1. Rename your script to `main.py`.
+2. Create a `main.py` file that simply imports your script:
+   ```python
+   # Inside main.py
+   import app
+   ```
