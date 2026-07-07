@@ -1,16 +1,20 @@
-# Project 27: ESP-NOW Home Automation - Sender (Shrike Fi / ESP32-S3)
-# MicroPython - 4 buttons to control remote relays + OLED to show temp/humidity
-#
-# Wiring (Shrike Fi):
-#   Button 1 -> ESP_IO1 (pullup, active low)
-#   Button 2 -> ESP_IO2 (pullup, active low)
-#   Button 3 -> ESP_IO3 (pullup, active low)
-#   Button 4 -> ESP_IO4 (pullup, active low)
-#   OLED SCK  -> ESP_IO5
-#   OLED MOSI -> ESP_IO6
-#   OLED CS   -> ESP_IO7
-#   OLED DC   -> ESP_IO8
-#   OLED RES  -> ESP_IO9
+"""
+Project 27: ESP-NOW Home Automation (Sender)
+Shrike Fi / ESP32-S3
+4 buttons control remote relays. OLED shows temp/humidity.
+
+Wiring:
+Button 1   -> ESP_IO15 (pullup, active low)
+Button 2   -> ESP_IO16 (pullup, active low)
+Button 3   -> ESP_IO17 (pullup, active low)
+Button 4   -> ESP_IO18 (pullup, active low)
+OLED SCK   -> ESP_IO5
+OLED MOSI  -> ESP_IO6
+OLED CS    -> ESP_IO7
+OLED DC    -> ESP_IO4
+OLED RES   -> ESP_IO3
+Dummy MISO -> ESP_IO1 (Keeps SPI from stealing other pins)
+"""
 
 import network
 import espnow
@@ -34,20 +38,24 @@ e.add_peer(RECEIVER_MAC)
 
 # Setup buttons (active low with internal pullup)
 buttons = [
-    Pin(1, Pin.IN, Pin.PULL_UP),
-    Pin(2, Pin.IN, Pin.PULL_UP),
-    Pin(3, Pin.IN, Pin.PULL_UP),
-    Pin(4, Pin.IN, Pin.PULL_UP),
+    Pin(15, Pin.IN, Pin.PULL_UP),
+    Pin(16, Pin.IN, Pin.PULL_UP),
+    Pin(17, Pin.IN, Pin.PULL_UP),
+    Pin(18, Pin.IN, Pin.PULL_UP),
 ]
 
 # Relay state tracking
 relay_states = [0, 0, 0, 0]
 
-# Setup OLED (SPI)
-spi = SPI(1, baudrate=10000000, sck=Pin(5), mosi=Pin(6))
+"""
+setup SPI OLED
+we use a dummy MISO pin so the board doesn't 
+secretly steal one of our other pins
+"""
+spi = SPI(1, baudrate=10000000, sck=Pin(5), mosi=Pin(6), miso=Pin(1))
 oled_cs = Pin(7, Pin.OUT)
-oled_dc = Pin(8, Pin.OUT)
-oled_res = Pin(9, Pin.OUT)
+oled_dc = Pin(4, Pin.OUT)
+oled_res = Pin(3, Pin.OUT)
 oled = ssd1306.SSD1306_SPI(128, 64, spi, oled_dc, oled_res, oled_cs)
 
 # Display vars
