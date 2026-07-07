@@ -1,23 +1,37 @@
-# Project 28: PIR Parking System - Shrike Lite (RP2040)
-# MicroPython - 2 PIR sensors monitor parking slots, OLED shows status
-#
-# Wiring (Shrike Lite):
-#   PIR 1 OUT -> RP_IO16
-#   PIR 2 OUT -> RP_IO17
-#   OLED SDA  -> RP_IO6 (I2C1 SDA)
-#   OLED SCL  -> RP_IO7 (I2C1 SCL)
+"""
+Project 28: PIR Parking System (Shrike Lite)
+Monitors 2 parking slots with PIR sensors.
+Shows live status on OLED.
+
+Wiring:
+PIR 1        -> RP_IO16
+PIR 2        -> RP_IO17
+OLED SCK     -> RP_IO10
+OLED MOSI    -> RP_IO11
+OLED CS      -> RP_IO14
+OLED DC      -> RP_IO15
+OLED RES     -> RP_IO9
+Dummy MISO   -> RP_IO8 (Keeps SPI from stealing other pins)
+"""
 
 import time
-from machine import Pin, I2C
+from machine import Pin, SPI
 import ssd1306
 
 # PIR sensor pins
 pir1 = Pin(16, Pin.IN)
 pir2 = Pin(17, Pin.IN)
 
-# OLED setup (I2C1 on Shrike Lite)
-i2c = I2C(1, scl=Pin(7), sda=Pin(6), freq=400000)
-oled = ssd1306.SSD1306_I2C(128, 64, i2c)
+"""
+setup SPI OLED
+we use a dummy MISO pin so the board doesn't 
+secretly steal one of our other pins
+"""
+spi = SPI(1, baudrate=10000000, sck=Pin(10), mosi=Pin(11), miso=Pin(8))
+oled_cs = Pin(14, Pin.OUT)
+oled_dc = Pin(15, Pin.OUT)
+oled_res = Pin(9, Pin.OUT)
+oled = ssd1306.SSD1306_SPI(128, 64, spi, oled_dc, oled_res, oled_cs)
 
 # Slot states (toggle on motion)
 slot1_full = False

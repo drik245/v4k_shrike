@@ -1,23 +1,37 @@
-# Project 28: PIR Parking System - Shrike Fi (ESP32-S3)
-# MicroPython - 2 PIR sensors monitor parking slots, OLED shows status
-#
-# Wiring (Shrike Fi):
-#   PIR 1 OUT -> ESP_IO1
-#   PIR 2 OUT -> ESP_IO2
-#   OLED SDA  -> ESP_IO6
-#   OLED SCL  -> ESP_IO5
+"""
+Project 28: PIR Parking System (Shrike Fi)
+Monitors 2 parking slots with PIR sensors.
+Shows live status on OLED.
+
+Wiring:
+PIR 1        -> ESP_IO14
+PIR 2        -> ESP_IO2
+OLED SCK     -> ESP_IO5
+OLED MOSI    -> ESP_IO6
+OLED CS      -> ESP_IO7
+OLED DC      -> ESP_IO4
+OLED RES     -> ESP_IO3
+Dummy MISO   -> ESP_IO1 (Keeps SPI from stealing other pins)
+"""
 
 import time
-from machine import Pin, SoftI2C
+from machine import Pin, SPI
 import ssd1306
 
 # PIR sensor pins
-pir1 = Pin(1, Pin.IN)
+pir1 = Pin(14, Pin.IN)
 pir2 = Pin(2, Pin.IN)
 
-# OLED setup
-i2c = SoftI2C(scl=Pin(5), sda=Pin(6), freq=400000)
-oled = ssd1306.SSD1306_I2C(128, 64, i2c)
+"""
+setup SPI OLED
+we use a dummy MISO pin so the board doesn't 
+secretly steal one of our other pins
+"""
+spi = SPI(1, baudrate=10000000, sck=Pin(5), mosi=Pin(6), miso=Pin(1))
+oled_cs = Pin(7, Pin.OUT)
+oled_dc = Pin(4, Pin.OUT)
+oled_res = Pin(3, Pin.OUT)
+oled = ssd1306.SSD1306_SPI(128, 64, spi, oled_dc, oled_res, oled_cs)
 
 # Slot states (toggle on motion)
 slot1_full = False
