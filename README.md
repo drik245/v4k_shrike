@@ -9,6 +9,7 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 1 | [Snake Game](01_snake_game/) | Shrike Lite / Shrike Fi, Joystick Module, SSD1306 OLED | Classic snake game on SSD1306 OLED with joystick control |
 | 2 | [BLE Joystick Mouse](02_joystick_mouse/) | Shrike Fi, Joystick Module | BLE HID mouse using a joystick — requires Bluetooth |
 | 3 | [Servo Ctrl with OLED Gauge](03_servo_ctrl/) | Shrike Lite / Shrike Fi, Joystick Module, Servo Motor | Joystick-controlled servo with a live needle gauge on OLED |
+| 4 | [RGB Potentiometer](04_rgb_potentiometer/) | Shrike Lite / Shrike Fi, RGB LED, 3x Potentiometers | (MicroPython) Hardware-agnostic RGB LED color mixer using three analog potentiometers and an EMA noise filter |
 | 5 | [DHT22 Web Server](05_dht22_web_server/) | Shrike Fi, DHT22 Sensor | Wi-Fi AP serving temperature and humidity webpage |
 | 6 | [ClimaPixel Weather](06_climapixel_weather/) | Shrike Fi, SSD1306 OLED | Wi-Fi Weather display using OpenWeatherMap API |
 | 7 | [Blynk IoT Relay](07_blynk_relay/) | Shrike Fi, Relay Module, DHT22 | Cloud-controlled thermostat/relay. Sends temp/humidity to Blynk and uses temperature thresholds to toggle relay. |
@@ -33,4 +34,5 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 26 | [ESP-NOW RFID Display](26_espnow_rfid_display/) | Shrike Fi + ESP32 WROOM, MFRC522, OLED | (MicroPython) Wirelessly sends scanned RFID UIDs to a second board's OLED via ESP-NOW |
 | 27 | [ESP-NOW Home Automation](27_espnow_home_automation/) | Shrike Fi + ESP32 WROOM, 4-Ch Relay, DHT22, OLED | (MicroPython) Bidirectional ESP-NOW: 4 buttons control remote relays, sensor data sent back to OLED |
 | 28 | [PIR Parking System](28_pir_parking_system/) | Shrike Lite / Shrike Fi, 2x PIR, OLED | (MicroPython) Monitors 2 parking slots with PIR sensors and shows live status on OLED |
-| 30 | [RGB LED Control using Python GUI](30_RGB_Led_Ctrl_using_pythonGUI/) | Shrike Lite / Shrike Fi, RGB LED | (MicroPython/Python) Full-stack RGB LED control! Custom PC GUI communicates over USB serial to control an RGB LED with breath and disco modes |
+| 29 | [OLED Internet Radio](29_internet_radio/) | Shrike Fi, SSD1306 OLED, TDA2030 Amplifier, Buttons | Full standalone internet radio. Plays live HTTP MP3 streams over PDM with OLED station navigation |
+| 30 | [RGB LED Control using Python GUI](30_RGB_Led_Ctrl_using_pythonGUI/) | Shrike Lite / Shrike Fi, RGB LED | (MicroPython/Python) Full-stack RGB LED control! Custom PC GUI communicates over USB serial to control an RGB LED with breath, disco, and cycle modes |
