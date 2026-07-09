@@ -102,6 +102,10 @@ class ShrikeLEDApp(ctk.CTk):
                                         command=lambda: self.toggle_effect("disco"))
         self.disco_btn.pack(side="left", expand=True, fill="x", padx=5)
 
+        self.cycle_btn = ctk.CTkButton(effect_frame, text="🌈 Cycle",
+                                        command=lambda: self.toggle_effect("cycle"))
+        self.cycle_btn.pack(side="left", expand=True, fill="x", padx=5)
+
         self.preview = ctk.CTkFrame(self, height=60, fg_color="#000000")
         self.preview.pack(pady=10, padx=15, fill="x")
 
@@ -310,6 +314,8 @@ class ShrikeLEDApp(ctk.CTk):
             fg_color="#2fa572" if self.effect_mode == "breath" else self._idle_color)
         self.disco_btn.configure(
             fg_color="#2fa572" if self.effect_mode == "disco" else self._idle_color)
+        self.cycle_btn.configure(
+            fg_color="#2fa572" if self.effect_mode == "cycle" else self._idle_color)
 
     def update_preview(self):
         r, g, b = self.rgb

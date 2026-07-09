@@ -12,11 +12,11 @@ import select
 micropython.kbd_intr(-1)
 
 # change this depending on which board you're flashing
-BOARD = "shrike_fi"   # "shrike_lite" or "shrike_fi"
+BOARD = "shrike_lite"   # "shrike_lite" or "shrike_fi"
 
 # gpio pins for each board, picked to avoid the fpga bridge pins and stuff
 PINS = {
-    "shrike_lite": {"R": 16, "G": 17, "B": 21},
+    "shrike_lite": {"R": 10, "G": 11, "B": 14},
     "shrike_fi":   {"R": 4,  "G": 5,  "B": 6},
 }
 
@@ -28,6 +28,7 @@ COMMON_ANODE = True
 
 BREATH_PERIOD_S = 3.0     # how long one breathe in-out takes
 DISCO_INTERVAL_MS = 150   # how fast disco flashes change
+CYCLE_PERIOD_S = 5.0      # how long a full colour cycle takes
 
 pins = PINS[BOARD]
 led = {}
@@ -71,6 +72,8 @@ def handle_line(line):
             mode = "breath"
         elif line == "MODE:DISCO":
             mode = "disco"
+        elif line == "MODE:CYCLE":
+            mode = "cycle"
         elif line == "MODE:MANUAL":
             mode = "manual"
         elif line.startswith("RGB:"):
@@ -109,6 +112,15 @@ def disco_step():
     set_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
+def cycle_step(t):
+    # sine waves offset by 120 degrees for R, G, B to sweep through all colours
+    freq = 2 * math.pi / CYCLE_PERIOD_S
+    r = (math.sin(freq * t) + 1) * 127.5
+    g = (math.sin(freq * t + 2 * math.pi / 3) + 1) * 127.5
+    b = (math.sin(freq * t + 4 * math.pi / 3) + 1) * 127.5
+    set_rgb(int(r), int(g), int(b))
+
+
 all_off()
 print("READY", BOARD)
 
@@ -128,6 +140,9 @@ while True:
         if mode == "breath":
             t = time.ticks_diff(time.ticks_ms(), t0) / 1000
             breath_step(t)
+        elif mode == "cycle":
+            t = time.ticks_diff(time.ticks_ms(), t0) / 1000
+            cycle_step(t)
         elif mode == "disco":
             now = time.ticks_ms()
             if time.ticks_diff(now, last_disco) >= DISCO_INTERVAL_MS:

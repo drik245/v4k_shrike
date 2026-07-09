@@ -2,12 +2,12 @@
 
 A full-stack project combining MicroPython on the Shrike board with a custom graphical user interface (GUI) on your PC!
 
-It allows you to control an RGB LED in real-time over a USB serial connection. The GUI features a color picker, individual R/G/B sliders, a Hue slider, and built-in animation modes (Breath and Disco).
+It allows you to control an RGB LED in real-time over a USB serial connection. The GUI features a color picker, individual R/G/B sliders, a Hue slider, and built-in animation modes (Breath, Disco, and Cycle).
 
 ## 🛠️ The Architecture
 
 This project is split into two halves:
-1. **The Firmware (`shrike_led_firmware.py`)**: A MicroPython script that runs on the Shrike board. It listens to the USB Serial port for text commands (e.g., `RGB:255,0,0`, `MODE:BREATH`) and translates them into high-frequency PWM signals for the LED.
+1. **The Firmware (`shrike_led_firmware.py`)**: A MicroPython script that runs on the Shrike board. It listens to the USB Serial port for text commands (e.g., `RGB:255,0,0`, `MODE:BREATH`) and translates them into high-frequency PWM signals for the LED. It specifically disables `Ctrl-C` (`micropython.kbd_intr(-1)`) to ensure the USB serial communication isn't accidentally interrupted by stray data.
 2. **The GUI (`shrike_led_gui.py`)**: A Python desktop app that runs on your computer. It uses a background thread to seamlessly connect to the board's COM port without freezing the UI, and sends commands whenever you move a slider or click a button.
 
 ## Hardware Wiring
@@ -17,9 +17,9 @@ By default, the code is configured for a **Common Anode** RGB LED (the longest l
 ### Shrike Lite (RP2040)
 | RGB LED Pin | Shrike Lite Pin |
 |-------------|-----------------|
-| Red | RP_IO16 |
-| Green | RP_IO17 |
-| Blue | RP_IO21 |
+| Red | RP_IO10 |
+| Green | RP_IO11 |
+| Blue | RP_IO14 |
 | Common (Longest) | 3V3 (or GND if Common Cathode) |
 
 ### Shrike Fi (ESP32-S3)
@@ -35,10 +35,10 @@ By default, the code is configured for a **Common Anode** RGB LED (the longest l
 ## 🚀 Setup & Usage
 
 ### 1. Flash the Board
-1. Open `shrike_led_firmware.py`.
-2. Change the `BOARD` variable to match your board (`"shrike_lite"` or `"shrike_fi"`).
-3. Upload the script to your board and save it as `main.py` so it runs automatically on boot.
-4. **Important:** Close Thonny or any other serial monitor! Only one program can use a serial port at a time.
+1. Upload `shrike_led_firmware.py` to your board but save it as `main.py`.
+   ```bash
+   python -m mpremote cp shrike_led_firmware.py :main.py
+   ```
 
 ### 2. Run the PC GUI
 On your computer, you need Python installed. Install the required libraries via terminal/command prompt:
@@ -56,15 +56,3 @@ python shrike_led_gui.py
 2. Click **Connect**.
 3. Use the sliders, color picker, or effect buttons to control the LED! 
 4. The status text at the bottom will show you exactly what the board is doing or report any errors.
-
----
-## 💡 MicroPython Tip: Auto-run on Boot
-By default, MicroPython boards automatically search for and execute a file named **`main.py`** on boot. If your code is inside a file with a different name (e.g., `app.py`), it will **not** run automatically when you power on the board.
-
-To make it run on boot, you have two options:
-1. Rename your script to `main.py`.
-2. Create a `main.py` file that simply imports your script:
-   ```python
-   # Inside main.py
-   import app
-   ```
