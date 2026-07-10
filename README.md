@@ -36,3 +36,55 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 28 | [PIR Parking System](28_pir_parking_system/) | Shrike Lite / Shrike Fi, 2x PIR, OLED | (MicroPython) Monitors 2 parking slots with PIR sensors and shows live status on OLED |
 | 29 | [OLED Internet Radio](29_internet_radio/) | Shrike Fi, SSD1306 OLED, TDA2030 Amplifier, 3.5mm Jack, Buttons | Standalone internet radio with mono audio output via PDM, OLED with WiFi signal bars, and button-based station navigation |
 | 30 | [RGB LED Control using Python GUI](30_RGB_Led_Ctrl_using_pythonGUI/) | Shrike Lite / Shrike Fi, RGB LED | (MicroPython/Python) Full-stack RGB LED control! Custom PC GUI communicates over USB serial to control an RGB LED with breath, disco, and cycle modes |
+
+## Getting Started
+
+For board-specific documentation, pinouts, and firmware downloads, check the official Shrike repo:
+- **[Vicharak Shrike GitHub](https://github.com/vicharak-in/shrike)** — Getting started guides, hardware files, and UF2 firmware for Shrike Lite, Shrike Fi, and Shrike.
+
+### Arduino IDE Projects
+Most projects in this repo use the **Arduino IDE**. Select the correct board in the IDE:
+- **Shrike Lite** → Board: `Raspberry Pi Pico`
+- **Shrike Fi** → Board: `ESP32S3 Dev Module`
+
+### MicroPython Projects
+Projects marked with `(MicroPython)` run on MicroPython firmware. You'll need **mpremote** to manage files on the board.
+
+## mpremote Quick Reference
+
+### Install
+```bash
+pip install mpremote
+```
+
+### Basic Commands
+
+| What | Command |
+|------|---------|
+| Open REPL | `mpremote repl` |
+| List connected devices | `mpremote devs` |
+| Soft reset | `mpremote soft-reset` |
+| Run a local script (without uploading) | `mpremote run script.py` |
+
+### File Management
+Use `:` as prefix to refer to files on the board.
+
+```bash
+# list files on the board
+mpremote fs ls
+
+# copy a file to the board
+mpremote cp main.py :main.py
+
+# copy a file from the board to your PC
+mpremote cp :main.py ./backup.py
+
+# delete a file on the board
+mpremote rm :old_file.py
+```
+
+### Tips
+- MicroPython auto-runs `main.py` on boot. Name your script `main.py` or create a `main.py` that imports it.
+- To run a script for testing without saving it to the board, use `mpremote run script.py`.
+- If `mpremote` can't connect ("could not enter raw repl"), your `main.py` is probably running and blocking. Hold the **BOOT** button and replug USB to enter bootloader mode, then re-flash MicroPython.
+- Chain commands with `+`: `mpremote cp main.py :main.py + soft-reset`
