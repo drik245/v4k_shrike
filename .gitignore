@@ -2,3 +2,5 @@ dump
 04_dc_motor_web
 30_RGB_Led_Ctrl_using_pythonGUI/__pycache__
 instructions.md
+.gitignore
+matrix_driver_temp
