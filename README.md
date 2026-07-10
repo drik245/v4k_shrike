@@ -34,5 +34,5 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 26 | [ESP-NOW RFID Display](26_espnow_rfid_display/) | Shrike Fi + ESP32 WROOM, MFRC522, OLED | (MicroPython) Wirelessly sends scanned RFID UIDs to a second board's OLED via ESP-NOW |
 | 27 | [ESP-NOW Home Automation](27_espnow_home_automation/) | Shrike Fi + ESP32 WROOM, 4-Ch Relay, DHT22, OLED | (MicroPython) Bidirectional ESP-NOW: 4 buttons control remote relays, sensor data sent back to OLED |
 | 28 | [PIR Parking System](28_pir_parking_system/) | Shrike Lite / Shrike Fi, 2x PIR, OLED | (MicroPython) Monitors 2 parking slots with PIR sensors and shows live status on OLED |
-| 29 | [OLED Internet Radio](29_internet_radio/) | Shrike Fi, SSD1306 OLED, TDA2030 Amplifier, Buttons | Full standalone internet radio. Plays live HTTP MP3 streams over PDM with OLED station navigation |
+| 29 | [OLED Internet Radio](29_internet_radio/) | Shrike Fi, SSD1306 OLED, TDA2030 Amplifier, 3.5mm Jack, Buttons | Standalone internet radio with mono audio output via PDM, OLED with WiFi signal bars, and button-based station navigation |
 | 30 | [RGB LED Control using Python GUI](30_RGB_Led_Ctrl_using_pythonGUI/) | Shrike Lite / Shrike Fi, RGB LED | (MicroPython/Python) Full-stack RGB LED control! Custom PC GUI communicates over USB serial to control an RGB LED with breath, disco, and cycle modes |
