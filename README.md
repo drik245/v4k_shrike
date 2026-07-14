@@ -36,6 +36,25 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 28 | [PIR Parking System](28_pir_parking_system/) | Shrike Lite / Shrike Fi, 2x PIR, OLED | (MicroPython) Monitors 2 parking slots with PIR sensors and shows live status on OLED |
 | 29 | [OLED Internet Radio](29_internet_radio/) | Shrike Fi, SSD1306 OLED, TDA2030 Amplifier, 3.5mm Jack, Buttons | Standalone internet radio with mono audio output via PDM, OLED with WiFi signal bars, and button-based station navigation |
 | 30 | [RGB LED Control using Python GUI](30_RGB_Led_Ctrl_using_pythonGUI/) | Shrike Lite / Shrike Fi, RGB LED | (MicroPython/Python) Full-stack RGB LED control! Custom PC GUI communicates over USB serial to control an RGB LED with breath, disco, and cycle modes |
+| 31 | [Web-based Oscilloscope](31_web_oscilloscope/) | Shrike Fi | Read ADC and stream via WebSockets to a JS chart. |
+| 32 | [Bluetooth LED Control](32_bluetooth_led_control/) | Shrike Lite, HC-05 | (MicroPython) Control an LED wirelessly via smartphone and HC-05. |
+| 33 | [MQTT Smart Home Node](33_mqtt_smart_home/) | Shrike Fi, DHT22 | Publish sensor data to a local MQTT broker. |
+| 34 | [BLE Xbox-Style Gamepad](34_ble_gamepad/) | Shrike Fi, 2x Joystick Modules, 4x Buttons | BLE HID gamepad with dual analog thumbsticks + A/B/X/Y face buttons — shows up as a controller on PC. |
+| 35 | [RFID Internet Radio Player](35_rfid_radio/) | Shrike Fi, MFRC522, TDA2030 | Scan an RFID tag to switch internet radio stations. |
+| 36 | [Voice-Controlled LED](36_voice_led/) | Shrike Lite / Shrike Fi | Control LED via voice commands from PC over Serial. |
+| 37 | [Clap Toggle Switch](37_clap_switch/) | Shrike Lite / Shrike Fi, Sound Sensor, Relay | Toggle a light with a clap. |
+| 38 | [Rotary Encoder Menu System](38_rotary_menu/) | Shrike Lite / Shrike Fi, Rotary Encoder, SSD1306 OLED | (MicroPython) Scrollable OLED menu with cursor, scroll bar, and press-to-select actions. |
+| 39 | [Pomodoro Productivity Timer](39_pomodoro_timer/) | Shrike Lite / Shrike Fi, TM1637, Buzzer, Buttons | (MicroPython) 25-minute work/rest interval timer with blinking colon and buzzer alert. |
+| 40 | [Reaction Time Tester Game](40_reaction_tester/) | Shrike Lite / Shrike Fi, OLED, LED, Button | Measure your reflexes in milliseconds. |
+| 41 | [Morse Code Decoder](41_morse_decoder/) | Shrike Lite / Shrike Fi, SSD1306 OLED (SPI), Button | (MicroPython) Tap morse on a button, decode letters and words live on OLED with smart gap timing. |
+| 42 | [LED Bar Graph](42_led_bar_graph/) | Shrike Lite / Shrike Fi, 10 LEDs, Potentiometer | (MicroPython) Visualize analog input across 10 LEDs. |
+| 43 | [Laser Tripwire Alarm](43_laser_tripwire/) | Shrike Lite / Shrike Fi, LDR, Laser, Buzzer, Button | Classic laser security system with auto-calibration and a latching siren alarm. |
+| 44 | [Smart Dustbin](44_smart_dustbin/) | Shrike Lite / Shrike Fi, Ultrasonic, Servo | (MicroPython) Auto-opening dustbin lid via HC-SR04 and precise PWM. |
+| 45 | [DC Fan Speed Control](45_dc_fan_pwm/) | Shrike Lite / Shrike Fi, MOSFET, DC Fan, Potentiometer | (MicroPython) Control fan speed smoothly via Hardware PWM. |
+| 46 | [Line Follower Robot](46_line_follower/) | Shrike Lite / Shrike Fi, IR Sensors, L298N, Motors | (MicroPython) Follow a black line on the floor using a classic 2-wheel chassis. |
+| 47 | [RTC Clock with DS3231](47_rtc_clock/) | Shrike Lite, DS3231, TM1637 | (MicroPython) Hardware real-time clock with custom DS3231 driver. |
+| 48 | [Automated Plant Watering](48_auto_watering/) | Shrike Lite / Shrike Fi, Soil Sensor, Relay, Pump | (MicroPython) Water plants automatically based on soil moisture via ADC. |
+| 49 | [Beating Heart Matrix](49_beating_heart/) | Shrike Lite / Shrike Fi, 8x8 LED Matrix | (MicroPython) Beating heart animation on a raw 8x8 matrix using a custom GPIO multiplexing driver. |
 
 ## Getting Started
 
