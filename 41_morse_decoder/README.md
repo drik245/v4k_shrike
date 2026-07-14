@@ -21,7 +21,8 @@ Supports both **Shrike Lite** and **Shrike Fi**.
 | OLED CS | `RP_IO5` |
 | OLED DC | `RP_IO8` |
 | OLED RES | `RP_IO9` |
-| Button | `RP_IO14` → GND |
+| Morse Button | `RP_IO14` → GND |
+| Clear Button | `RP_IO11` → GND |
 
 ### Shrike Fi (ESP32-S3)
 | Signal | Pin |
@@ -31,16 +32,22 @@ Supports both **Shrike Lite** and **Shrike Fi**.
 | OLED CS | `ESP_IO34` |
 | OLED DC | `ESP_IO4` |
 | OLED RES | `ESP_IO5` |
-| Button | `ESP_IO14` → GND |
+| Morse Button | `ESP_IO14` → GND |
+| Clear Button | `ESP_IO11` → GND |
 
 OLED VCC → 3.3V, GND → GND. Button uses `INPUT_PULLUP`, no resistor needed.
 
 ## Software Setup (MicroPython)
 
 1. Flash your board with MicroPython firmware.
-2. The `ssd1306` driver is built into standard MicroPython — no extra files needed.
+2. Navigate to `41_morse_decoder/driver` and upload the OLED driver:
+   ```bash
+   cd driver
+   mpremote cp ssd1306.py :ssd1306.py
+   cd ..
+   ```
 3. Navigate into `shrike_lite` or `shrike_fi`.
-4. Upload `main.py`:
+4. Upload `main.py` and run it:
    ```bash
    mpremote cp main.py :main.py
    mpremote soft-reset

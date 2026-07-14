@@ -32,6 +32,7 @@ spi = SPI(2, baudrate=10_000_000, sck=Pin(36), mosi=Pin(35), miso=Pin(37))
 oled = SSD1306_SPI(128, 64, spi, dc=Pin(4), res=Pin(5), cs=Pin(34))
 
 btn = Pin(14, Pin.IN, Pin.PULL_UP)
+clear_btn = Pin(11, Pin.IN, Pin.PULL_UP)
 
 MORSE = {
     '.-': 'A',    '-...': 'B',  '-.-.': 'C',  '-..': 'D',   '.': 'E',
@@ -92,6 +93,13 @@ draw()
 while True:
     now = time.ticks_ms()
     btn_down = btn.value() == 0
+    clear_btn_down = clear_btn.value() == 0
+
+    if clear_btn_down:
+        current_symbols = ''
+        decoded_text = ''
+        draw()
+        time.sleep_ms(200) # Simple debounce
 
     if btn_down and not btn_was_down:
         # Button just pressed — record start
