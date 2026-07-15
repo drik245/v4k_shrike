@@ -46,7 +46,7 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 38 | [Rotary Encoder Menu System](38_rotary_menu/) | Shrike Lite / Shrike Fi, Rotary Encoder, SSD1306 OLED | (MicroPython) Scrollable OLED menu with cursor, scroll bar, and press-to-select actions. |
 | 39 | [Pomodoro Productivity Timer](39_pomodoro_timer/) | Shrike Lite / Shrike Fi, TM1637, Buzzer, Buttons | (MicroPython) 25-minute work/rest interval timer with blinking colon and buzzer alert. |
 | 40 | [Reaction Time Tester Game](40_reaction_tester/) | Shrike Lite / Shrike Fi, OLED, LED, Button | Measure your reflexes in milliseconds. |
-| 41 | [Morse Code Decoder](41_morse_decoder/) | Shrike Lite / Shrike Fi, SSD1306 OLED (SPI), Button | (MicroPython) Tap morse on a button, decode letters and words live on OLED with smart gap timing. |
+| 41 | [Automatic Telegrapher Keyer](41_morse_decoder/) | Shrike Lite / Shrike Fi, SSD1306 OLED (SPI), Button | (MicroPython) Tap morse on a button, decode letters and words live on OLED with smart gap timing. |
 | 42 | [LED Bar Graph](42_led_bar_graph/) | Shrike Lite / Shrike Fi, 10 LEDs, Potentiometer | (MicroPython) Visualize analog input across 10 LEDs. |
 | 43 | [Laser Tripwire Alarm](43_laser_tripwire/) | Shrike Lite / Shrike Fi, LDR, Laser, Buzzer, Button | Classic laser security system with auto-calibration and a latching siren alarm. |
 | 44 | [Smart Dustbin](44_smart_dustbin/) | Shrike Lite / Shrike Fi, Ultrasonic, Servo | (MicroPython) Auto-opening dustbin lid via HC-SR04 and precise PWM. |
