@@ -1,5 +1,5 @@
 """
-Project 41: Morse Code Decoder (Shrike Lite - RP2040)
+Project 41: Automatic Telegrapher Keyer (Shrike Lite - RP2040)
 
 Press the button to enter morse code. The OLED shows the current
 dots/dashes as you type, and decodes each letter when you pause.
@@ -23,7 +23,7 @@ Wiring:
   Button    -> RP_IO14 to GND  (INPUT_PULLUP, no resistor needed)
 """
 
-from machine import Pin, SPI
+from machine import Pin, SPI, PWM
 from ssd1306 import SSD1306_SPI
 import time
 
@@ -31,8 +31,15 @@ import time
 spi = SPI(0, baudrate=10_000_000, sck=Pin(6), mosi=Pin(7), miso=Pin(4))
 oled = SSD1306_SPI(128, 64, spi, dc=Pin(8), res=Pin(9), cs=Pin(5))
 
-btn = Pin(14, Pin.IN, Pin.PULL_UP)
-clear_btn = Pin(11, Pin.IN, Pin.PULL_UP)
+# Input Buttons
+dot_btn = Pin(11, Pin.IN, Pin.PULL_UP)
+dash_btn = Pin(14, Pin.IN, Pin.PULL_UP)
+clear_btn = Pin(15, Pin.IN, Pin.PULL_UP)
+
+# Buzzer
+buzzer = PWM(Pin(10))
+buzzer.freq(1000) # 1kHz tone
+buzzer.duty_u16(0) # Off initially
 
 MORSE = {
     '.-': 'A',    '-...': 'B',  '-.-.': 'C',  '-..': 'D',   '.': 'E',
@@ -48,21 +55,20 @@ MORSE = {
 
 current_symbols = ''   # dots and dashes for the current letter
 decoded_text    = ''   # full decoded sentence so far
+last_input_time = time.ticks_ms()
 
-press_start  = 0
-release_time = time.ticks_ms()
-btn_was_down = False
-
-WORD_GAP   = 1500  # ms of silence = space between words
-LETTER_GAP =  600  # ms of silence = end of letter
-DOT_MAX    =  300  # max press duration for a dot
-NOISE_MIN  =   50  # ignore presses shorter than this
-
+# --- Configurable Settings ---
+DOT_BEEP_MS     = 100
+DASH_BEEP_MS    = 300
+SYMBOL_SPACE_MS = 100  # Pause after a dot/dash before the next one can start
+WORD_GAP        = 1500 # ms of silence = space between words
+LETTER_GAP      = 600  # ms of silence = end of letter
+# -----------------------------
 
 def draw():
     """Redraw the full display."""
     oled.fill(0)
-    oled.text("Morse Decoder", 0, 0)
+    oled.text("Auto Keyer", 0, 0)
     oled.hline(0, 10, 128, 1)
 
     # Current letter being entered
@@ -72,9 +78,7 @@ def draw():
     words = decoded_text[-32:]
     oled.text(words[:16], 0, 36)
     oled.text(words[16:32], 0, 50)
-
     oled.show()
-
 
 def decode_letter():
     """Look up the current morse sequence and append to decoded text."""
@@ -86,47 +90,57 @@ def decode_letter():
         if len(decoded_text) > 64:
             decoded_text = decoded_text[-32:]
 
+def beep(duration_ms):
+    buzzer.duty_u16(32768) # 50% duty cycle to play tone
+    time.sleep_ms(duration_ms)
+    buzzer.duty_u16(0)     # Turn off tone
 
 draw()
 
 while True:
     now = time.ticks_ms()
-    btn_down = btn.value() == 0
-    clear_btn_down = clear_btn.value() == 0
+    
+    # Read buttons (0 = pressed because of PULL_UP)
+    dot_down = (dot_btn.value() == 0)
+    dash_down = (dash_btn.value() == 0)
+    clear_down = (clear_btn.value() == 0)
 
-    if clear_btn_down:
+    if clear_down:
         current_symbols = ''
         decoded_text = ''
+        last_input_time = now
         draw()
         time.sleep_ms(200) # Simple debounce
+        continue
 
-    if btn_down and not btn_was_down:
-        press_start = now
-        btn_was_down = True
+    if dot_down:
+        # Dot pressed! Auto-repeats if held down.
+        beep(DOT_BEEP_MS)
+        current_symbols += '.'
+        last_input_time = time.ticks_ms()
+        draw()
+        time.sleep_ms(SYMBOL_SPACE_MS)
+    
+    elif dash_down: # Use elif to prevent both happening at once
+        # Dash pressed! Auto-repeats if held down.
+        beep(DASH_BEEP_MS)
+        current_symbols += '-'
+        last_input_time = time.ticks_ms()
+        draw()
+        time.sleep_ms(SYMBOL_SPACE_MS)
 
-    elif not btn_down and btn_was_down:
-        duration = time.ticks_diff(now, press_start)
-        release_time = now
-        btn_was_down = False
-
-        if duration >= NOISE_MIN:
-            if duration < DOT_MAX:
-                current_symbols += '.'
-            else:
-                current_symbols += '-'
-            draw()
-
-    elif not btn_down and not btn_was_down:
-        idle = time.ticks_diff(now, release_time)
+    # Check for pauses to decode letters or insert spaces
+    if not dot_down and not dash_down:
+        idle = time.ticks_diff(now, last_input_time)
 
         if current_symbols and idle >= LETTER_GAP:
             decode_letter()
             draw()
-            release_time = now
+            last_input_time = now
 
         if idle >= WORD_GAP and decoded_text and not decoded_text.endswith(' '):
             decoded_text += ' '
             draw()
-            release_time = now
+            last_input_time = now
 
     time.sleep_ms(10)

@@ -1,4 +1,4 @@
-# Project 41: Morse Code Decoder
+# Project 41: Automatic Telegrapher Keyer
 
 Tap morse code on a button and watch it decode in real time on the OLED display. The screen shows your current dots/dashes as you enter them, and automatically decodes each letter after a short pause. Written in **MicroPython**.
 
@@ -9,7 +9,8 @@ Supports both **Shrike Lite** and **Shrike Fi**.
 |-----------|-----|
 | Shrike Lite or Shrike Fi | 1 |
 | SSD1306 OLED (128×64, SPI) | 1 |
-| Momentary push button | 1 |
+| Momentary push buttons | 3 |
+| Active or Passive Buzzer | 1 |
 
 ## Wiring / Pinout
 
@@ -21,8 +22,10 @@ Supports both **Shrike Lite** and **Shrike Fi**.
 | OLED CS | `RP_IO5` |
 | OLED DC | `RP_IO8` |
 | OLED RES | `RP_IO9` |
-| Morse Button | `RP_IO14` → GND |
-| Clear Button | `RP_IO11` → GND |
+| **Dot Button** | `RP_IO11` → GND |
+| **Dash Button** | `RP_IO14` → GND |
+| **Clear Button** | `RP_IO15` → GND |
+| **Buzzer** | `RP_IO10` |
 
 ### Shrike Fi (ESP32-S3)
 | Signal | Pin |
@@ -32,10 +35,12 @@ Supports both **Shrike Lite** and **Shrike Fi**.
 | OLED CS | `ESP_IO34` |
 | OLED DC | `ESP_IO4` |
 | OLED RES | `ESP_IO5` |
-| Morse Button | `ESP_IO14` → GND |
-| Clear Button | `ESP_IO11` → GND |
+| **Dot Button** | `ESP_IO11` → GND |
+| **Dash Button** | `ESP_IO14` → GND |
+| **Clear Button** | `ESP_IO15` → GND |
+| **Buzzer** | `ESP_IO10` |
 
-OLED VCC → 3.3V, GND → GND. Button uses `INPUT_PULLUP`, no resistor needed.
+OLED VCC → 3.3V, GND → GND. Buttons use `INPUT_PULLUP`, no resistors needed. Connect the buzzer's positive pin to the IO pin and negative to GND.
 
 ## Software Setup (MicroPython)
 
@@ -55,14 +60,20 @@ OLED VCC → 3.3V, GND → GND. Button uses `INPUT_PULLUP`, no resistor needed.
 
 ## How It Works
 
+Instead of trying to time your button presses perfectly, this updated version uses **three separate buttons**:
+1. **Dot Button**: Instantly types a dot (`.`) and plays a short 100ms beep.
+2. **Dash Button**: Instantly types a dash (`-`) and plays a longer 300ms beep.
+3. **Clear Button**: Wipes the screen and resets the current input.
+
+**Auto-Repeat Feature:** If you hold down the Dot or Dash button, it will continuously type that symbol at a fixed rate, exactly like an automatic telegraph keyer!
+
+You can adjust the speed of the beeps and the repeat rate easily by changing `DOT_BEEP_MS`, `DASH_BEEP_MS`, and `SYMBOL_SPACE_MS` at the top of the `main.py` script!
+
 ### Timing Reference
 | Action | Duration |
 |--------|----------|
-| Short press (dot `.`) | 50 – 300 ms |
-| Long press (dash `-`) | ≥ 300 ms |
-| Pause between symbols | < 600 ms (keep typing the letter) |
-| Pause to decode letter | ≥ 600 ms |
-| Pause for word space | ≥ 1500 ms |
+| Pause to decode letter | ≥ 600 ms of inactivity |
+| Pause for word space | ≥ 1500 ms of inactivity |
 
 ### Display Layout
 ```
