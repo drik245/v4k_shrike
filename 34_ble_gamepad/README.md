@@ -3,7 +3,7 @@
 Turn your Shrike Fi into a **wireless Bluetooth gamepad** that shows up on your PC exactly like an Xbox controller — complete with **dual analog thumbsticks** and **4 face buttons (A, B, X, Y)**.
 
 > [!WARNING]
-> **Disclaimer:** This project serves as a proof of concept. The standard KY-023 Arduino joystick modules have poor mechanical return-to-center and large deadzones, making them not very suitable for serious or competitive gaming. It is a great educational project for learning BLE HID and analog mapping!
+> **Disclaimer:** This project serves as a proof of concept. The standard KY-023 Arduino joystick modules have poor mechanical return-to-center and large deadzones, making them unsuitable for serious or competitive gaming. Furthermore, because this exposes a standard generic HID device rather than a proprietary XInput device, many modern PC games will not recognize it natively without the use of translation software like Steam Input or x360ce. It is, however, a great educational project for learning BLE HID and analog mapping!
 
 > **Board:** Shrike Fi only (ESP32-S3 has built-in Bluetooth)
 
