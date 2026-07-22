@@ -55,6 +55,7 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 47 | [RTC Clock with DS3231](47_rtc_clock/) | Shrike Lite, DS3231, TM1637 | (MicroPython) Hardware real-time clock with custom DS3231 driver. |
 | 48 | [Automated Plant Watering](48_auto_watering/) | Shrike Lite / Shrike Fi, Soil Sensor, Relay, Pump | (MicroPython) Water plants automatically based on soil moisture via ADC. |
 | 49 | [Beating Heart Matrix](49_beating_heart/) | Shrike Lite / Shrike Fi, 8x8 LED Matrix | (MicroPython) Beating heart animation on a raw 8x8 matrix using a custom GPIO multiplexing driver. |
+| 50 | [Royal Tetris](50_royal_tetris/) | Shrike Lite / Shrike Fi, Rotary Encoder, SSD1306 OLED | (MicroPython) Fully playable Tetris clone on the OLED display controlled entirely by a single rotary encoder. |
 
 ## Getting Started
 

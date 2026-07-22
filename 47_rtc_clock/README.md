@@ -26,6 +26,11 @@ Supports **Shrike Lite** (Note: For Shrike Fi, see Project 16 which uses the ESP
 - Connect the **VCC** of both the DS3231 and TM1637 to **3.3V** or 5V on the Shrike board.
 - Connect the **GND** of both modules to **GND** on the Shrike board.
 
+> [!NOTE]
+> **Why SoftI2C?**
+> In `main.py`, you'll notice we initialize the DS3231 using `SoftI2C` (Software I2C) rather than standard Hardware `I2C`. We do this purely for **flexibility**.
+> Software I2C emulates the I2C protocol using standard GPIO toggling. Since an RTC module communicates at a very low speed (100kHz), the performance is identical to Hardware I2C, but it guarantees the code will work flawlessly no matter which random pins you decide to wire your SDA and SCL lines to. If you want to use the dedicated hardware controller on the RP2040, you can change the code to use `I2C(1, scl=Pin(7), sda=Pin(6))`.
+
 ## Software Setup (MicroPython)
 
 The `shrike_lite` folder contains three files: `main.py`, `ds3231.py` (the RTC driver), and `tm1637.py` (the display driver).
