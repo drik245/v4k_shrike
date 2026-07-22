@@ -7,17 +7,17 @@ Turn the knob to move the cursor, push the knob to select an item.
 Wiring:
   OLED VCC  -> 3.3V
   OLED GND  -> GND
-  OLED SCL  -> ESP_IO36  (SPI2_CLK)
-  OLED SDA  -> ESP_IO35  (SPI2_MOSI)
-  OLED CS   -> ESP_IO34  (SPI2_CS0)
+  OLED SCL  -> ESP_IO5
+  OLED SDA  -> ESP_IO6
+  OLED CS   -> ESP_IO7
   OLED DC   -> ESP_IO4
-  OLED RES  -> ESP_IO5
+  OLED RES  -> ESP_IO3
+  Dummy MISO-> ESP_IO1
 
-  Encoder CLK (A) -> ESP_IO1
-  Encoder DT  (B) -> ESP_IO2
-  Encoder SW      -> ESP_IO3
-  Encoder VCC     -> 3.3V
-  Encoder GND     -> GND
+  Encoder CLK (A) -> ESP_IO15
+  Encoder DT  (B) -> ESP_IO16
+  Encoder SW      -> ESP_IO17
+  Encoder Power   -> KY-040 VCC to 3.3V, GND to GND. (If using a raw bare encoder, ignore VCC and just wire the Common pins to GND).
 
 Library: ssd1306 (built into MicroPython firmware)
 """
@@ -26,14 +26,17 @@ from machine import Pin, SPI
 from ssd1306 import SSD1306_SPI
 import time
 
-# Hardware SPI2 — miso=Pin(37) is ESP_IO37 (SPI2_MISO) on the right header
-spi = SPI(2, baudrate=10_000_000, sck=Pin(36), mosi=Pin(35), miso=Pin(37))
-oled = SSD1306_SPI(128, 64, spi, dc=Pin(4), res=Pin(5), cs=Pin(34))
+# Hardware SPI1 — matching your previous projects!
+spi = SPI(1, baudrate=10_000_000, sck=Pin(5), mosi=Pin(6), miso=Pin(1))
+oled_cs = Pin(7, Pin.OUT)
+oled_dc = Pin(4, Pin.OUT)
+oled_res = Pin(3, Pin.OUT)
+oled = SSD1306_SPI(128, 64, spi, oled_dc, oled_res, oled_cs)
 
-# Encoder pins
-clk = Pin(1, Pin.IN, Pin.PULL_UP)
-dt  = Pin(2, Pin.IN, Pin.PULL_UP)
-sw  = Pin(3, Pin.IN, Pin.PULL_UP)
+# Encoder pins (moved to avoid OLED conflict)
+clk = Pin(15, Pin.IN, Pin.PULL_UP)
+dt  = Pin(16, Pin.IN, Pin.PULL_UP)
+sw  = Pin(17, Pin.IN, Pin.PULL_UP)
 
 MENU_ITEMS = ["LED Blink", "Show Info", "Counter", "About"]
 cursor = 0
@@ -61,35 +64,83 @@ def draw_menu():
 
 
 def run_action(item):
+    # Wait for the user to release the button first!
+    while sw.value() == 0:
+        time.sleep_ms(10)
+
     oled.fill(0)
     if item == "LED Blink":
         oled.text("LED Blink!", 20, 20)
-        oled.text("(no onboard LED)", 0, 40)
+        oled.text("Press to exit", 10, 45)
+        oled.show()
+        led = Pin(21, Pin.OUT)
+        state = 1
+        while sw.value() == 1:
+            led.value(state)
+            state = 1 - state
+            for _ in range(20):  # 200ms non-blocking delay
+                if sw.value() == 0: break
+                time.sleep_ms(10)
+        led.value(0)
+        return
     elif item == "Show Info":
         oled.text("Shrike Fi", 30, 10)
         oled.text("ESP32-S3", 30, 25)
         oled.text("MicroPython", 20, 40)
+        oled.text("Press to exit", 10, 55)
+        oled.show()
+        while sw.value() == 1:
+            time.sleep_ms(10)
+        return
     elif item == "Counter":
-        for n in range(5, 0, -1):
+        count = 1
+        while sw.value() == 1:
             oled.fill(0)
-            oled.text("Counting...", 10, 10)
-            oled.text(str(n), 55, 32)
+            oled.text("Counting up:", 20, 10)
+            oled.text(str(count), 55, 32)
+            oled.text("Press to exit", 10, 50)
             oled.show()
-            time.sleep(1)
+            count += 1
+            for _ in range(100): # 1000ms non-blocking delay
+                if sw.value() == 0: break
+                time.sleep_ms(10)
+        return
     elif item == "About":
-        oled.text("Project 38", 20, 10)
-        oled.text("Rotary Menu", 16, 28)
-        oled.text("Vicharak 2025", 8, 46)
-    oled.show()
-    time.sleep(2)
+        credits = ["Project 38", "Rotary Menu", "", "Created by:", "@drik245", "", "Vicharak 2026", "Thank You!"]
+        y_offset = 47
+        while sw.value() == 1:
+            oled.fill(0)
+            
+            # Draw credits
+            for i, line in enumerate(credits):
+                text_y = int(y_offset) + i * 12
+                if -10 < text_y < 70:
+                    x = (128 - len(line) * 8) // 2
+                    oled.text(line, x, text_y)
+            
+            # Draw solid black masks over the top and bottom to create a strict 3-line window
+            oled.fill_rect(0, 0, 128, 17, 0)
+            oled.fill_rect(0, 47, 128, 17, 0)
+            
+            oled.show()
+            y_offset -= 0.5  # Smooth 0.5 pixel scrolling speed
+            
+            if y_offset < -(len(credits) * 12):
+                y_offset = 47  # Reset to bottom of window
+                
+            for _ in range(2):
+                if sw.value() == 0: break
+                time.sleep_ms(10)
+        return
 
 
 draw_menu()
 
 while True:
     new_clk = clk.value()
-    if new_clk != last_clk:
-        if dt.value() != new_clk:
+    # Only trigger on falling edge (1 -> 0) to avoid double-counting detents
+    if last_clk == 1 and new_clk == 0:
+        if dt.value() == 1:
             cursor = (cursor + 1) % len(MENU_ITEMS)
         else:
             cursor = (cursor - 1) % len(MENU_ITEMS)
