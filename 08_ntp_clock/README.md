@@ -17,6 +17,8 @@ Includes two display options:
 ## Features
 
 - NTP time sync on boot via `pool.ntp.org`
+- **Offline Fallback:** If WiFi fails, seamlessly falls back to an internal oscillator (starting at 12:00) using `millis()`.
+- **Auto Reconnect:** Periodically checks WiFi status and automatically resyncs internal clock with NTP when connection returns.
 - IST timezone offset pre-configured (configurable)
 - **OLED Version:** Day of week, date, large HH:MM:SS, seconds progress bar
 - **TM1637 Version:** Simple HH:MM with blinking colon
