@@ -1,26 +1,29 @@
 # 🕐 NTP Digital Clock
 
-WiFi-connected digital clock on a **128×64 SSD1306 OLED** (SPI), synced to NTP time servers. Displays the day of the week, date, large HH:MM:SS time, and a seconds progress bar.
+WiFi-connected digital clock, synced to NTP time servers. 
+Includes two display options:
+1. **128×64 SSD1306 OLED** (SPI) - Displays day, date, large time, and seconds progress bar.
+2. **TM1637 4-digit seven-segment display** - Displays time with blinking colon.
 
 ## Board Variants
 
 | Variant | Board | MCU | Sketch |
 |---------|-------|-----|--------|
-| [shrike_fi](shrike_fi/) | Shrike Fi | ESP32-S3 | `shrike_fi/ntp_clock.ino` |
+| [shrike_fi (OLED)](shrike_fi/) | Shrike Fi | ESP32-S3 | `shrike_fi/ntp_clock.ino` |
+| [shrike_fi (TM1637)](shrike_fi/) | Shrike Fi | ESP32-S3 | `shrike_fi/ntp_clock_tm1637.ino` |
 
 > Shrike Lite is not supported (no WiFi on RP2040).
 
 ## Features
 
 - NTP time sync on boot via `pool.ntp.org`
-- Day of week, date (DD-MM-YYYY), and large HH:MM:SS display
-- Seconds progress bar at the bottom
-- Rounded border frame
 - IST timezone offset pre-configured (configurable)
+- **OLED Version:** Day of week, date, large HH:MM:SS, seconds progress bar
+- **TM1637 Version:** Simple HH:MM with blinking colon
 
 ## Wiring
 
-### Shrike Fi (ESP32-S3)
+### Shrike Fi (ESP32-S3) - OLED Version
 
 | Function | Signal | GPIO |
 |----------|--------|------|
@@ -32,14 +35,22 @@ WiFi-connected digital clock on a **128×64 SSD1306 OLED** (SPI), synced to NTP 
 | OLED VCC | 3.3V | — |
 | OLED GND | GND | — |
 
+### Shrike Fi (ESP32-S3) - TM1637 Version
+
+| Function | Signal | GPIO |
+|----------|--------|------|
+| TM1637 CLK | ESP_IO1 | 1 |
+| TM1637 DIO | ESP_IO2 | 2 |
+
 ## Dependencies
 
 Install these via the Arduino Library Manager:
 
-| Library | Author |
-|---------|--------|
-| **Adafruit SSD1306** | Adafruit |
-| **Adafruit GFX** | Adafruit |
+| Library | Author | For Sketch |
+|---------|--------|------------|
+| **Adafruit SSD1306** | Adafruit | `ntp_clock.ino` |
+| **Adafruit GFX** | Adafruit | `ntp_clock.ino` |
+| **TM1637Display** | Avishay Orpaz | `ntp_clock_tm1637.ino` |
 
 ## Arduino IDE Setup
 

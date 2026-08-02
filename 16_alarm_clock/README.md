@@ -7,6 +7,7 @@ Offline alarm clock on a **TM1637 4-digit seven-segment display** with three pus
 | Variant | Board | MCU | Sketch |
 |---------|-------|-----|--------|
 | [shrike_fi](shrike_fi/) | Shrike Fi | ESP32-S3 | `shrike_fi/alarm_clock.ino` |
+| [shrike_lite](shrike_lite/) | Shrike Lite | RP2040 | `shrike_lite/alarm_clock.ino` |
 
 ## Features
 
@@ -41,6 +42,17 @@ Offline alarm clock on a **TM1637 4-digit seven-segment display** with three pus
 | DOWN button | ESP_IO5 | 5 (active low, internal pullup) |
 | Buzzer | ESP_IO6 | 6 |
 
+### Shrike Lite (RP2040)
+
+| Function | Signal | GPIO |
+|----------|--------|------|
+| TM1637 CLK | RP_IO2 | 2 |
+| TM1637 DIO | RP_IO3 | 3 |
+| MODE button | RP_IO4 | 4 (active low, internal pullup) |
+| UP button | RP_IO5 | 5 (active low, internal pullup) |
+| DOWN button | RP_IO6 | 6 (active low, internal pullup) |
+| Buzzer | RP_IO7 | 7 |
+
 ## Dependencies
 
 Install these via the Arduino Library Manager:
@@ -51,8 +63,8 @@ Install these via the Arduino Library Manager:
 
 ## Arduino IDE Setup
 
-1. **Board**: `ESP32S3 Dev Module`
-2. Open `shrike_fi/alarm_clock.ino` and upload
+- **For Shrike Fi**: Select `ESP32S3 Dev Module` and open `shrike_fi/alarm_clock.ino`
+- **For Shrike Lite**: Select `Raspberry Pi Pico` and open `shrike_lite/alarm_clock.ino`
 
 ## Usage
 
