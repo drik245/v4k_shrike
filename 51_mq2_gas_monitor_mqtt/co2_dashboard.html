@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CO₂ Live Monitor — Shrike Fi</title>
+    <meta name="description" content="Live CO2 PPM dashboard for Shrike Fi ESP32-S3 gas sensor project via MQTT.">
+
+    <!-- Chart.js for the live line chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <!-- mqtt.js for browser-side MQTT over WebSocket -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Inter font for clean engineering aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===================================================================
+           DESIGN SYSTEM — Dark engineering dashboard palette
+           =================================================================== */
+        :root {
+            --bg-primary:    #0a0e17;
+            --bg-card:       #111827;
+            --bg-card-hover: #1a2332;
+            --border:        #1e293b;
+            --border-glow:   rgba(99, 102, 241, 0.15);
+
+            --text-primary:  #f1f5f9;
+            --text-secondary:#94a3b8;
+            --text-muted:    #64748b;
+
+            /* Status colors — CO2 thresholds */
+            --safe:          #22c55e;
+            --safe-bg:       rgba(34, 197, 94, 0.08);
+            --safe-border:   rgba(34, 197, 94, 0.25);
+            --moderate:      #eab308;
+            --moderate-bg:   rgba(234, 179, 8, 0.08);
+            --moderate-border:rgba(234, 179, 8, 0.25);
+            --danger:        #ef4444;
+            --danger-bg:     rgba(239, 68, 68, 0.08);
+            --danger-border: rgba(239, 68, 68, 0.25);
+
+            /* Connection status */
+            --connected:     #22c55e;
+            --connecting:    #f59e0b;
+            --disconnected:  #ef4444;
+
+            /* Chart */
+            --chart-line:    #6366f1;
+            --chart-fill:    rgba(99, 102, 241, 0.08);
+            --chart-grid:    rgba(148, 163, 184, 0.06);
+        }
+
+        /* ===================================================================
+           RESET & BASE
+           =================================================================== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* ===================================================================
+           LAYOUT — Single column, max-width container
+           =================================================================== */
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* ===================================================================
+           HEADER — Project branding + connection status
+           =================================================================== */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+        }
+
+        .header h1 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header h1 .icon {
+            font-size: 1.25rem;
+        }
+
+        .header h1 .subtitle {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        /* Connection status badge */
+        .conn-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.3rem 0.625rem;
+            border-radius: 9999px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .conn-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .conn-badge[data-status="connected"] {
+            color: var(--connected);
+            background: rgba(34, 197, 94, 0.08);
+            border-color: rgba(34, 197, 94, 0.2);
+        }
+        .conn-badge[data-status="connected"] .dot {
+            background: var(--connected);
+            box-shadow: 0 0 6px var(--connected);
+            animation: pulse-dot 2s infinite;
+        }
+
+        .conn-badge[data-status="connecting"] {
+            color: var(--connecting);
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        .conn-badge[data-status="connecting"] .dot {
+            background: var(--connecting);
+            animation: pulse-dot 0.8s infinite;
+        }
+
+        .conn-badge[data-status="disconnected"] {
+            color: var(--disconnected);
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        .conn-badge[data-status="disconnected"] .dot {
+            background: var(--disconnected);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ===================================================================
+           BIG NUMBER CARD — The hero element
+           =================================================================== */
+        .ppm-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            transition: border-color 0.5s ease, background 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle gradient glow behind the card based on status */
+        .ppm-card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 1rem;
+            padding: 1px;
+            background: linear-gradient(135deg, transparent, transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            transition: background 0.5s ease;
+            pointer-events: none;
+        }
+
+        .ppm-card[data-level="safe"] {
+            border-color: var(--safe-border);
+            background: linear-gradient(180deg, var(--safe-bg), var(--bg-card) 60%);
+        }
+        .ppm-card[data-level="moderate"] {
+            border-color: var(--moderate-border);
+            background: linear-gradient(180deg, var(--moderate-bg), var(--bg-card) 60%);
+        }
+        .ppm-card[data-level="danger"] {
+            border-color: var(--danger-border);
+            background: linear-gradient(180deg, var(--danger-bg), var(--bg-card) 60%);
+        }
+
+        .ppm-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .ppm-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 4.5rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -0.04em;
+            margin-bottom: 0.25rem;
+            transition: color 0.5s ease;
+        }
+
+        .ppm-unit {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .ppm-card[data-level="safe"] .ppm-value { color: var(--safe); }
+        .ppm-card[data-level="moderate"] .ppm-value { color: var(--moderate); }
+        .ppm-card[data-level="danger"] .ppm-value { color: var(--danger); }
+
+        /* Status text below the number */
+        .ppm-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            transition: all 0.5s ease;
+        }
+
+        .ppm-card[data-level="safe"] .ppm-status {
+            color: var(--safe);
+            background: var(--safe-bg);
+        }
+        .ppm-card[data-level="moderate"] .ppm-status {
+            color: var(--moderate);
+            background: var(--moderate-bg);
+        }
+        .ppm-card[data-level="danger"] .ppm-status {
+            color: var(--danger);
+            background: var(--danger-bg);
+        }
+
+        /* ===================================================================
+           INFO ROW — Last updated + topic
+           =================================================================== */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            padding: 0 0.25rem;
+        }
+
+        .info-row code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--chart-line);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        /* ===================================================================
+           CHART CARD
+           =================================================================== */
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.25rem;
+        }
+
+        .chart-card h2 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 200px;
+        }
+
+        /* ===================================================================
+           THRESHOLDS LEGEND
+           =================================================================== */
+        .thresholds {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+        }
+
+        .thresholds h3 {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .threshold-items {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .threshold-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .threshold-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .threshold-dot.safe { background: var(--safe); }
+        .threshold-dot.moderate { background: var(--moderate); }
+        .threshold-dot.danger { background: var(--danger); }
+
+        /* ===================================================================
+           FOOTER
+           =================================================================== */
+        .footer {
+            text-align: center;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            padding: 0.5rem 0 1rem;
+            line-height: 1.6;
+        }
+
+        .footer a {
+            color: var(--chart-line);
+            text-decoration: none;
+        }
+
+        /* ===================================================================
+           VALUE CHANGE ANIMATION
+           =================================================================== */
+        .ppm-value.flash {
+            animation: value-flash 0.4s ease;
+        }
+
+        @keyframes value-flash {
+            0% { opacity: 0.5; transform: scale(0.97); }
+            50% { opacity: 1; transform: scale(1.02); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* ===================================================================
+           RESPONSIVE — Tweak for very small phones
+           =================================================================== */
+        @media (max-width: 380px) {
+            .ppm-value { font-size: 3.5rem; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- HEADER -->
+        <header class="header">
+            <h1>
+                <span class="icon">🌫️</span>
+                <span>
+                    CO₂ Monitor
+                    <br><span class="subtitle">Shrike Fi · MQ-2 Sensor</span>
+                </span>
+            </h1>
+            <div class="conn-badge" id="connBadge" data-status="disconnected">
+                <span class="dot"></span>
+                <span id="connText">Disconnected</span>
+            </div>
+        </header>
+
+        <!-- BIG NUMBER -->
+        <div class="ppm-card" id="ppmCard" data-level="safe">
+            <div class="ppm-label">Approximate CO₂ Concentration</div>
+            <div class="ppm-value" id="ppmValue">—</div>
+            <div class="ppm-unit">PPM</div>
+            <div class="ppm-status" id="ppmStatus">
+                <span>Waiting for data…</span>
+            </div>
+        </div>
+
+        <!-- INFO ROW -->
+        <div class="info-row">
+            <span id="lastUpdated">Last update: —</span>
+            <span>Topic: <code>shrikefi/co2</code></span>
+        </div>
+
+        <!-- CHART -->
+        <div class="chart-card">
+            <h2>📈 Live Trend (last 30 readings)</h2>
+            <div class="chart-wrapper">
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+
+        <!-- THRESHOLDS LEGEND -->
+        <div class="thresholds">
+            <h3>⚠️ Approximate MQ-2 Thresholds</h3>
+            <div class="threshold-items">
+                <div class="threshold-item">
+                    <span class="threshold-dot safe"></span>
+                    <span>&lt; 800 PPM — Normal</span>
+                </div>
+                <div class="threshold-item">
+                    <span class="threshold-dot moderate"></span>
+                    <span>800–1500 PPM — Moderate</span>
+                </div>
+                <div class="threshold-item">
+                    <span class="threshold-dot danger"></span>
+                    <span>&gt; 1500 PPM — High</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            Vicharak Shrike Fi · ESP32-S3 · MQ-2 Gas Sensor<br>
+            MQTT via <a href="https://www.hivemq.com/mqtt/public-mqtt-broker/" target="_blank">HiveMQ Public Broker</a>
+            · Values are approximate, not lab-calibrated.
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         JAVASCRIPT — MQTT connection, chart, and UI updates
+         ===================================================================== -->
+    <script>
+    (function () {
+        'use strict';
+
+        // =================================================================
+        // CONFIG — Change these to match your setup
+        // =================================================================
+        const MQTT_BROKER   = 'wss://broker.hivemq.com:8884/mqtt';
+        const MQTT_TOPIC    = 'shrikefi/co2';
+        const MAX_READINGS  = 30; // Number of readings to show on the chart
+
+        // CO2 PPM thresholds (approximate for MQ-2 analog readings)
+        // These are NOT lab-calibrated; adjust based on your own observations.
+        const THRESHOLD_MODERATE = 800;
+        const THRESHOLD_DANGER   = 1500;
+
+        // =================================================================
+        // DOM REFERENCES
+        // =================================================================
+        const ppmCard      = document.getElementById('ppmCard');
+        const ppmValue     = document.getElementById('ppmValue');
+        const ppmStatus    = document.getElementById('ppmStatus');
+        const connBadge    = document.getElementById('connBadge');
+        const connText     = document.getElementById('connText');
+        const lastUpdated  = document.getElementById('lastUpdated');
+        const chartCanvas  = document.getElementById('chart');
+
+        // =================================================================
+        // DATA STORE — Circular buffer for chart data
+        // =================================================================
+        const readings = [];      // Array of { time: string, value: number }
+
+        // =================================================================
+        // CHART SETUP — Chart.js line chart
+        // =================================================================
+        const ctx = chartCanvas.getContext('2d');
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'CO₂ PPM',
+                    data: [],
+                    borderColor: getComputedStyle(document.documentElement)
+                        .getPropertyValue('--chart-line').trim(),
+                    backgroundColor: getComputedStyle(document.documentElement)
+                        .getPropertyValue('--chart-fill').trim(),
+                    borderWidth: 2,
+                    tension: 0.35,       // Smooth curve
+                    fill: true,
+                    pointRadius: 0,      // Hide individual dots for a cleaner look
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: '#6366f1',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 300 },
+                interaction: { mode: 'nearest', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f1f5f9',
+                        bodyColor: '#94a3b8',
+                        borderColor: '#334155',
+                        borderWidth: 1,
+                        padding: 10,
+                        cornerRadius: 8,
+                        titleFont: { family: 'JetBrains Mono', size: 11 },
+                        bodyFont: { family: 'Inter', size: 12 },
+                        callbacks: {
+                            label: (ctx) => `${ctx.parsed.y} PPM`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        ticks: {
+                            color: '#475569',
+                            font: { family: 'JetBrains Mono', size: 9 },
+                            maxTicksLimit: 6,
+                            maxRotation: 0
+                        },
+                        grid: { color: 'rgba(148, 163, 184, 0.04)' },
+                        border: { color: 'transparent' }
+                    },
+                    y: {
+                        display: true,
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#475569',
+                            font: { family: 'JetBrains Mono', size: 9 },
+                            maxTicksLimit: 5,
+                            callback: (v) => v + ' ppm'
+                        },
+                        grid: { color: 'rgba(148, 163, 184, 0.06)' },
+                        border: { color: 'transparent' }
+                    }
+                }
+            }
+        });
+
+        // =================================================================
+        // UI UPDATE HELPERS
+        // =================================================================
+
+        /**
+         * Classify CO2 PPM into a threat level string.
+         * Returns 'safe' | 'moderate' | 'danger'
+         */
+        function classifyLevel(ppm) {
+            if (ppm >= THRESHOLD_DANGER) return 'danger';
+            if (ppm >= THRESHOLD_MODERATE) return 'moderate';
+            return 'safe';
+        }
+
+        /** Human-friendly label for each level */
+        function levelLabel(level) {
+            switch (level) {
+                case 'safe':     return '✅ Normal — Air quality OK';
+                case 'moderate': return '⚠️ Moderate — Ventilate room';
+                case 'danger':   return '🔴 High — Open windows immediately';
+                default:         return '';
+            }
+        }
+
+        /** Format current time as HH:MM:SS */
+        function timeNow() {
+            return new Date().toLocaleTimeString('en-IN', {
+                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+        }
+
+        /** Update the connection status badge */
+        function setConnectionStatus(status) {
+            connBadge.dataset.status = status;
+            const labels = {
+                connected:    'Connected',
+                connecting:   'Connecting…',
+                disconnected: 'Disconnected'
+            };
+            connText.textContent = labels[status] || status;
+        }
+
+        /**
+         * Push a new PPM value, update the big number, status, and chart.
+         */
+        function pushReading(ppm) {
+            const now = timeNow();
+            const level = classifyLevel(ppm);
+
+            // Update hero number with flash animation
+            ppmValue.textContent = ppm;
+            ppmValue.classList.remove('flash');
+            // Force reflow to restart animation
+            void ppmValue.offsetWidth;
+            ppmValue.classList.add('flash');
+
+            // Update card theme
+            ppmCard.dataset.level = level;
+            ppmStatus.innerHTML = `<span>${levelLabel(level)}</span>`;
+
+            // Update timestamp
+            lastUpdated.textContent = `Last update: ${now}`;
+
+            // Update chart data (circular buffer)
+            readings.push({ time: now, value: ppm });
+            if (readings.length > MAX_READINGS) readings.shift();
+
+            chart.data.labels = readings.map(r => r.time);
+            chart.data.datasets[0].data = readings.map(r => r.value);
+
+            // Dynamically color the chart line based on latest level
+            const colorMap = {
+                safe:     getComputedStyle(document.documentElement).getPropertyValue('--safe').trim(),
+                moderate: getComputedStyle(document.documentElement).getPropertyValue('--moderate').trim(),
+                danger:   getComputedStyle(document.documentElement).getPropertyValue('--danger').trim()
+            };
+            chart.data.datasets[0].borderColor = colorMap[level];
+            chart.data.datasets[0].backgroundColor = colorMap[level] + '12'; // ~7% alpha
+
+            chart.update('none'); // Skip animation for real-time feel
+        }
+
+        // =================================================================
+        // MQTT CONNECTION — Auto-reconnect, subscribe, handle messages
+        // =================================================================
+
+        /** Generate a random client ID to avoid collisions on the public broker */
+        function randomClientId() {
+            return 'shrikefi_dash_' + Math.random().toString(36).substring(2, 10);
+        }
+
+        function connectMqtt() {
+            setConnectionStatus('connecting');
+
+            const client = mqtt.connect(MQTT_BROKER, {
+                clientId: randomClientId(),
+                clean: true,
+                reconnectPeriod: 3000,   // Auto-reconnect every 3s on disconnect
+                connectTimeout: 10000    // 10s timeout
+            });
+
+            client.on('connect', () => {
+                console.log('[MQTT] Connected to', MQTT_BROKER);
+                setConnectionStatus('connected');
+
+                // Subscribe to the CO2 topic
+                client.subscribe(MQTT_TOPIC, { qos: 0 }, (err) => {
+                    if (err) {
+                        console.error('[MQTT] Subscribe error:', err);
+                    } else {
+                        console.log('[MQTT] Subscribed to', MQTT_TOPIC);
+                    }
+                });
+            });
+
+            client.on('message', (topic, message) => {
+                // Parse the incoming PPM value (plain number as a UTF-8 string)
+                const raw = message.toString().trim();
+                const ppm = parseFloat(raw);
+
+                if (isNaN(ppm)) {
+                    console.warn('[MQTT] Non-numeric message received:', raw);
+                    return;
+                }
+
+                // Round to integer for display — fractional PPM is meaningless for MQ-2
+                pushReading(Math.round(ppm));
+            });
+
+            client.on('reconnect', () => {
+                console.log('[MQTT] Reconnecting…');
+                setConnectionStatus('connecting');
+            });
+
+            client.on('offline', () => {
+                console.log('[MQTT] Offline');
+                setConnectionStatus('disconnected');
+            });
+
+            client.on('error', (err) => {
+                console.error('[MQTT] Error:', err);
+                setConnectionStatus('disconnected');
+            });
+
+            client.on('close', () => {
+                console.log('[MQTT] Connection closed');
+                setConnectionStatus('disconnected');
+            });
+        }
+
+        // =================================================================
+        // BOOT — Start MQTT connection when the page loads
+        // =================================================================
+        connectMqtt();
+
+    })();
+    </script>
+</body>
+</html>

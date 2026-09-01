@@ -13,7 +13,7 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 5 | [DHT22 Web Server](05_dht22_web_server/) | Shrike Fi, DHT22 Sensor | Wi-Fi AP serving temperature and humidity webpage |
 | 6 | [ClimaPixel Weather](06_climapixel_weather/) | Shrike Fi, SSD1306 OLED | Wi-Fi Weather display using OpenWeatherMap API |
 | 7 | [Blynk IoT Relay](07_blynk_relay/) | Shrike Fi, Relay Module, DHT22 | Cloud-controlled thermostat/relay. Sends temp/humidity to Blynk and uses temperature thresholds to toggle relay. |
-| 8 | [NTP Digital Clock](08_ntp_clock/) | Shrike Fi, SSD1306 OLED | Wi-Fi connected digital clock synced to NTP servers |
+| 8 | [NTP Digital Clock](08_ntp_clock/) | Shrike Fi, SSD1306 / TM1637 | Wi-Fi NTP clock with offline oscillator fallback & auto-reconnect |
 | 9 | [Telegram Alert](09_telegram_alert/) | Shrike Fi, IR Sensor | Sends Telegram messages when motion is detected |
 | 10 | [Ultrasonic OLED](10_ultrasonic_distance/) | Shrike Lite / Shrike Fi, HC-SR04, SSD1306 OLED | Measures distance using ultrasonic pulses and displays on OLED |
 | 11 | [MQ135 Gas Sensor](11_mq135_gas_sensor/) | Shrike Lite / Shrike Fi, MQ-135 | Reads air quality using the onboard ADC |
@@ -21,7 +21,7 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 13 | [Smart UI Eyes](13_smart_ui_eyes/) | Shrike Fi, SSD1306 OLED | Animated robotic eyes displaying weather data |
 | 14 | [NTP TM1637 Clock](14_ntp_tm1637_clock/) | Shrike Fi, TM1637 Display | NTP-synced HH:MM clock on a 4-digit seven-segment display |
 | 15 | [Button Press Counter](15_button_counter/) | Shrike Lite / Shrike Fi, TM1637 Display, Button | Button counter on TM1637 — short press to count, hold to reset |
-| 16 | [Alarm Clock](16_alarm_clock/) | Shrike Fi, TM1637 Display, Buttons, Buzzer | Offline alarm clock — manual time set, blinking digits, buzzer alert |
+| 16 | [Alarm Clock](16_alarm_clock/) | Shrike Lite / Shrike Fi, TM1637 Display, Buttons, Buzzer | Offline alarm clock — manual time set, blinking digits, buzzer alert |
 | 17 | [Mini Weather Station](17_mini_weather_station/) | Shrike Fi, 16x2 LCD, DHT22 Sensor | Localized weather station displaying data on a 4-bit parallel LCD |
 | 18 | [Smart IR Object Detection](18_ir_object_detection/) | Shrike Lite / Shrike Fi, IR Sensor, LED, Buzzer | Simple object detection system with visual and auditory feedback |
 | 19 | [Wi-Fi 4WD Robot](19_wifi_4wd_robot/) | Shrike Fi, L298N, Servo, HC-SR04 | A massive 16-pin project: Wi-Fi controlled car with speed control and obstacle avoidance |
@@ -56,6 +56,7 @@ Example projects for the Vicharak Shrike development boards — **Shrike Lite (R
 | 48 | [Automated Plant Watering](48_auto_watering/) | Shrike Lite / Shrike Fi, Soil Sensor, Relay, Pump | (MicroPython) Water plants automatically based on soil moisture via ADC. |
 | 49 | [Beating Heart Matrix](49_beating_heart/) | Shrike Lite / Shrike Fi, 8x8 LED Matrix | (MicroPython) Beating heart animation on a raw 8x8 matrix using a custom GPIO multiplexing driver. |
 | 50 | [Royal Tetris](50_royal_tetris/) | Shrike Lite / Shrike Fi, Rotary Encoder, SSD1306 OLED | (MicroPython) Fully playable Tetris clone on the OLED display controlled entirely by a single rotary encoder. |
+| 51 | [Wireless MQ2 Gas Monitor (MQTT)](51_mq2_gas_monitor_mqtt/) | Shrike Fi (ESP32-S3), MQ-2 Gas Sensor, Voltage Divider | (Arduino / SmowCode) Reads MQ-2 analog gas concentration, maps to approximate CO₂ PPM, and publishes over WiFi via MQTT to a live browser dashboard. |
 
 ## Getting Started
 
