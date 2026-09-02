@@ -76,10 +76,14 @@ The ESP32-S3 firmware for this project was generated using **[SmowCode](https://
 ## Setup & Usage
 
 ### 1. Flash the ESP32-S3
-- Open the firmware `.ino` file in Arduino IDE (or flash via SmowCode)
-- Select board: `ESP32S3 Dev Module`
-- Update your **WiFi SSID** and **password** in the code
-- Upload and open Serial Monitor at `115200` baud to verify connection
+
+**SmowCode (recommended, no IDE needed):**
+1. Go to [studio.smowcode.com](https://studio.smowcode.com) and open the project flowchart
+2. Click the **WiFi** block and enter your **SSID** and **password**
+3. Click the **MQTT** block and verify broker is set to `broker.hivemq.com`, port `1883`, topic `shrikefi/co2`
+5. Connect Shrike Fi via USB
+6. Click **Flash** directly from SmowCode (uses built-in ESP32 flasher — no Arduino IDE needed)
+7. Open the **Serial Monitor** in SmowCode at `115200` baud to verify WiFi connection and MQTT publishes
 
 ### 2. Wire the MQ-2 Sensor
 - Connect MQ-2 VCC → 5V, GND → GND
